@@ -4,9 +4,9 @@ import ArrowOutwardOutlinedIcon from '@mui/icons-material/ArrowOutwardOutlined'
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined'
 import Crop54Icon from '@mui/icons-material/Crop54'
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined'
-import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material'; // Material-UI components for the visual interface
-import type Konva from 'konva'; // Types for the Konva.js library
-import React, { useCallback, useEffect, useRef, useState, type ElementType } from 'react'; // Essential React hooks and types
+import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material' // Material-UI components for the visual interface
+import type Konva from 'konva' // Types for the Konva.js library
+import React, { useCallback, useEffect, useRef, useState, type ElementType } from 'react' // Essential React hooks and types
 import {
   Image as KonvaImage,
   Line as KonvaLine,
@@ -14,11 +14,11 @@ import {
   Text as KonvaText,
   Layer,
   Stage,
-} from 'react-konva'; // Konva components for drawing on the canvas
-import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs for rectangles
-import type { ImageWithRects, RectShape } from '../types/Shapes'; // Custom types for images and shapes
-import { ImageCarousel } from './commons/AppCarouselImage'; // Component to display the image carousel
-import { GridStyled } from './muiStyled/GridStyled'; // Styled Grid component from Material-UI
+} from 'react-konva' // Konva components for drawing on the canvas
+import { v4 as uuidv4 } from 'uuid' // For generating unique IDs for rectangles
+import type { ImageWithRects, RectShape } from '../types/Shapes' // Custom types for images and shapes
+import { ImageCarousel } from './commons/AppCarouselImage' // Component to display the image carousel
+import { GridStyled } from './muiStyled/GridStyled' // Styled Grid component from Material-UI
 
 // --- Enum and Type Definitions ---
 
