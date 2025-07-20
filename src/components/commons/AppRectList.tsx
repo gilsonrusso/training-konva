@@ -55,7 +55,7 @@ export const AppRectList = () => {
             >
               <ListItemText
                 primary={`Classe: ${rect.label}`}
-                secondary={`Dimensões: ${rect.width.toFixed(0)}x${rect.height.toFixed(0)} | Posição: (X: ${rect.x.toFixed(0)}, Y: ${rect.y.toFixed(0)})`}
+                secondary={`Dimension: ${rect.width.toFixed(0)}x${rect.height.toFixed(0)} | Coords: (X: ${rect.x.toFixed(0)}, Y: ${rect.y.toFixed(0)})`}
                 sx={{ paddingLeft: '16px' }}
               />
             </ListItem>

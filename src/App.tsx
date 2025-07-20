@@ -82,7 +82,7 @@ function App() {
                 alt="logo"
                 className="h-7"
               />
-              <Typography sx={{ marginLeft: '5px' }}>Training</Typography>
+              <Typography sx={{ marginLeft: '5px' }}>Sasy</Typography>
             </Grid>
             <Grid
               flexGrow={8}

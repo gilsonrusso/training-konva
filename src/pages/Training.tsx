@@ -1,10 +1,11 @@
 import { Box, Grid, styled, type GridProps } from '@mui/material'
-import { createContext, useContext, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { AppDrawerPanel } from '../components/AppDrawerPanel'
 import { AppDrawerStage } from '../components/AppDrawerStage'
+import { RANDOM_RGBA_COLORS, RANDOM_SOLID_COLORS } from '../constants/rgbaOptions'
 import { useSnackbar } from '../contexts/SnackBarContext'
-import type { ImageWithRects } from '../types/Shapes'
+import type { ClassDefinition, ImageWithRects } from '../types/Shapes'
 
 const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
   height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - ${105}px)`,
@@ -14,15 +15,18 @@ type DeleteRectangleProps = {
   imageId: string
   rectId: string
 }
+type AddClassItemProps = {
+  name: string
+}
 
 type DrawerContextType = {
   selectedImage: ImageWithRects | null
   classItemSelected: number
-  classItems: string[]
+  classItems: ClassDefinition[]
   images: ImageWithRects[]
-  handleSetClassItem: (valuer: number) => void
-  handleAddClassItem: (value: string) => void
-  handleDeleteClassItem: (value: number) => void
+  handleSetClassItem: (classId: number) => void
+  handleAddClassItem: ({ name }: AddClassItemProps) => void
+  handleDeleteClassItem: (classId: number) => void
   handlerDeleteRectangle: ({ imageId, rectId }: DeleteRectangleProps) => void
 }
 
@@ -33,14 +37,26 @@ const TrainingPage = () => {
   const [selectedImage, setSelectedImage] = useState<ImageWithRects | null>(null)
 
   const [classItemSelected, setClassItemSelected] = useState<number>(-1)
-  const [classItems, setClassItems] = useState<string[]>([])
+  const [classItems, setClassItems] = useState<ClassDefinition[]>([])
 
-  const appDrawerExportRef = useRef<(() => void) | null>(null)
+  const appDrawerExportRef = useRef<((exportType: 'image' | 'yolo') => void) | null>(null)
 
   const { showMessage } = useSnackbar()
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+
+    if (files.length === 0) {
+      showMessage('No image selected to upload.')
+      return
+    }
+
+    // Clear selection and rectangles when loading new images
+    setSelectedImage(null)
+    setImages([])
+
+    let loadedCount = 0
+    const newImagesArray: ImageWithRects[] = []
 
     files.forEach((file) => {
       const id = uuidv4()
@@ -48,12 +64,29 @@ const TrainingPage = () => {
       img.src = URL.createObjectURL(file)
       img.onload = () => {
         const newImage: ImageWithRects = { id, image: img, rects: [] }
-        setImages((prev) => [...prev, newImage])
-        setSelectedImage(newImage)
+        newImagesArray.push(newImage)
+        loadedCount++
+
+        // When all images are loaded, update the states
+        if (loadedCount === files.length) {
+          setImages(newImagesArray)
+          // Sets the first image as selected by default
+          if (newImagesArray.length > 0) {
+            setSelectedImage(newImagesArray[0])
+          }
+          showMessage(`${loadedCount} imagem(ns) carregada(s) com sucesso!`)
+        }
       }
       img.onerror = (err) => {
         console.error('Erro ao carregar a imagem:', err)
-        alert('Não foi possível carregar a imagem.')
+        showMessage('Não foi possível carregar uma ou mais imagens.')
+        loadedCount++
+        if (loadedCount === files.length) {
+          setImages(newImagesArray)
+          if (newImagesArray.length > 0) {
+            setSelectedImage(newImagesArray[0])
+          }
+        }
       }
     })
   }
@@ -65,58 +98,94 @@ const TrainingPage = () => {
           ...img,
           rects: img.rects.filter(({ id }) => id !== rectId),
         }
-        setSelectedImage(newImg)
+        // Updates selectedImage if it is the image being edited
+        if (selectedImage && selectedImage.id === imageId) {
+          setSelectedImage(newImg)
+        }
         return newImg
       }
       return img
     })
     setImages(newImagesArr)
+    showMessage('Retângulo removido!')
   }
 
-  const handleAddClassItem = (value: string) => {
-    const valueSanitized = value.trim().toLowerCase()
+  const handleAddClassItem = useCallback(
+    ({ name }: AddClassItemProps) => {
+      const valueSanitized = name.trim().toLowerCase()
 
-    const foundIndex = classItems.findIndex((item) => item === valueSanitized)
-    if (foundIndex !== -1) return
+      const foundIndex = classItems.find((item) => item.name === valueSanitized)
+      if (foundIndex) {
+        showMessage(`Class name: ${name} already exists.`)
+      }
 
-    const newClassItems = [...classItems]
-    newClassItems.push(valueSanitized)
+      const newClassId = classItems.length > 0 ? Math.max(...classItems.map((c) => c.id)) + 1 : 0
 
-    setClassItems(newClassItems)
-  }
+      // Lógica para selecionar uma cor aleatória
+      const randomRgbaIndex = Math.floor(Math.random() * RANDOM_RGBA_COLORS.length)
+      const randomSolidIndex = Math.floor(Math.random() * RANDOM_SOLID_COLORS.length)
 
-  const handleDeleteClassItem = (index: number) => {
-    const newClassItems = [...classItems]
+      const rgbaColor = RANDOM_RGBA_COLORS[randomRgbaIndex]
+      const solidBorderColor = RANDOM_SOLID_COLORS[randomSolidIndex]
 
-    if (index === classItemSelected) {
-      setClassItemSelected(-1)
+      const newClass: ClassDefinition = {
+        id: newClassId,
+        name: valueSanitized,
+        rgbaColor,
+        solidBorderColor,
+      }
+
+      setClassItems((prev) => [...prev, newClass])
+      setClassItemSelected(newClassId)
+      showMessage(`Classe "${name}" add with success!`)
+    },
+    [classItems, showMessage]
+  )
+
+  const handleDeleteClassItem = (classIdToDelete: number) => {
+    if (classItemSelected === classIdToDelete) {
+      setClassItemSelected(-1) // Desseleciona se a classe ativa for removida
     }
 
-    newClassItems.splice(index, 1)
-
+    const newClassItems = classItems.filter((item) => item.id !== classIdToDelete)
     setClassItems(newClassItems)
+
+    // Remove retângulos associados à classe deletada de todas as imagens
+    setImages((prevImages) =>
+      prevImages.map((img) => {
+        const updatedRects = img.rects.filter((rect) => rect.classId !== classIdToDelete)
+        const updatedImage = { ...img, rects: updatedRects }
+        // Atualiza selectedImage se for a imagem afetada
+        if (selectedImage && selectedImage.id === img.id) {
+          setSelectedImage(updatedImage)
+        }
+        return updatedImage
+      })
+    )
+    showMessage('All tags using this class have all been removed.')
   }
 
-  const handleSetClassItem = (index: number) => {
-    setClassItemSelected((prev) => (prev === index ? -1 : index))
+  const handleSetClassItem = (classIdToSelect: number) => {
+    // Alterna a seleção: se clicar na mesma, desseleciona
+    setClassItemSelected((prev) => (prev === classIdToSelect ? -1 : classIdToSelect))
   }
 
-  // A função onExportClick agora chamará a função exposta pelo AppDrawer
-  const onExportClick = () => {
+  // onExportClick agora recebe o tipo de exportação
+  const onExportClick = (exportType: 'image' | 'yolo') => {
     if (appDrawerExportRef.current) {
-      appDrawerExportRef.current() // Chama a função de exportação do AppDrawer
+      appDrawerExportRef.current(exportType) // Passa o tipo para a função de exportação do AppDrawerStage
     } else {
-      showMessage('Nenhuma imagem para exportar ou o AppDrawer não está pronto.')
+      showMessage('O sistema de exportação não está pronto.')
     }
   }
 
-  // Função que o AppDrawer chamará para atualizar os retângulos de uma imagem
+  // Function that AppDrawer will call to update the rectangles of an image
   const handleUpdateImageRects = (updatedImage: ImageWithRects) => {
     setImages((prevImages) =>
       prevImages.map((img) => (img.id === updatedImage.id ? updatedImage : img))
     )
-    // É crucial atualizar o selectedImage aqui para que o AppDrawer re-renderize
-    // com os novos retângulos, já que selectedImage é uma prop para ele.
+    // It's crucial to update the selectedImage here so that AppDrawer re-renders
+    // with the new rectangles, since selectedImage is a prop for it.
     if (selectedImage && selectedImage.id === updatedImage.id) {
       setSelectedImage(updatedImage)
     }

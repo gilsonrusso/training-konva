@@ -4,9 +4,11 @@ import ArrowOutwardOutlinedIcon from '@mui/icons-material/ArrowOutwardOutlined'
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined'
 import Crop54Icon from '@mui/icons-material/Crop54'
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined'
-import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material' // Material-UI components for the visual interface
-import type Konva from 'konva' // Types for the Konva.js library
-import React, { useCallback, useEffect, useRef, useState, type ElementType } from 'react' // Essential React hooks and types
+import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material'
+import { saveAs } from 'file-saver'
+import JSZip from 'jszip'
+import type Konva from 'konva'
+import React, { useCallback, useEffect, useRef, useState, type ElementType } from 'react'
 import {
   Image as KonvaImage,
   Line as KonvaLine,
@@ -14,15 +16,13 @@ import {
   Text as KonvaText,
   Layer,
   Stage,
-} from 'react-konva' // Konva components for drawing on the canvas
-import { v4 as uuidv4 } from 'uuid' // For generating unique IDs for rectangles
+} from 'react-konva'
+import { v4 as uuidv4 } from 'uuid'
 import { useSnackbar } from '../contexts/SnackBarContext'
 import { useDrawerContext } from '../pages/Training'
-import type { ImageWithRects, RectShape } from '../types/Shapes' // Custom types for images and shapes
-import { ImageCarousel } from './commons/AppCarouselImage' // Component to display the image carousel
-import { GridStyled } from './muiStyled/GridStyled' // Styled Grid component from Material-UI
-
-// --- Enum and Type Definitions ---
+import type { ImageWithRects, RectShape } from '../types/Shapes'
+import { ImageCarousel } from './commons/AppCarouselImage'
+import { GridStyled } from './muiStyled/GridStyled'
 
 /**
  * @enum {DrawTools}
@@ -32,12 +32,12 @@ import { GridStyled } from './muiStyled/GridStyled' // Styled Grid component fro
  * making the code more readable and less prone to string typos.
  */
 export enum DrawTools {
-  Select = 'select', // Tool for selecting and moving objects
-  Rectangle = 'Rectangle', // Tool for drawing rectangles
-  Circle = 'circle', // Tool for drawing circles (not yet implemented, but planned)
-  Arrow = 'Arrow', // Tool for drawing arrows (not yet implemented, but planned)
-  Brush = 'brush', // Tool for free drawing (not yet implemented, but planned)
-  Eraser = 'eraser', // Tool for erasing (not yet implemented, but planned)
+  Select = 'select',
+  Rectangle = 'Rectangle',
+  Circle = 'circle',
+  Arrow = 'Arrow',
+  Brush = 'brush',
+  Eraser = 'eraser',
 }
 
 /**
@@ -58,31 +58,15 @@ const downloadURI = ({ uri, name }: downloadURIProps) => {
 }
 
 /**
- * @constant {string[]} RGBA_COLORS
- * @description Array of RGBA colors for filling rectangles (with transparency).
+ * @function downloadBlob
+ * @description Downloads a Blob (like a ZIP file) as a file.
+ * @param {Object} props - Object containing the Blob and the file name.
  * Why is this added?
- * Provides a variety of colors for the drawn rectangles, with transparency
- * so that the underlying image is still visible.
+ * Allows the user to export files that are generated as Blobs (e.g., ZIP files for YOLO annotations).
  */
-const RGBA_COLORS = [
-  'rgba(255, 0, 0, 0.3)', // Red
-  'rgba(0, 0, 255, 0.3)', // Blue
-  'rgba(0, 255, 0, 0.3)', // Green
-  'rgba(255, 255, 0, 0.3)', // Yellow
-  'rgba(255, 0, 255, 0.3)', // Magenta
-  'rgba(0, 255, 255, 0.3)', // Cyan
-  'rgba(128, 0, 128, 0.3)', // Purple
-  'rgba(255, 165, 0, 0.3)', // Orange
-]
-
-/**
- * @constant {string[]} SOLID_COLORS
- * @description Array of solid colors for rectangle borders and text.
- * Why is this added?
- * Complements the RGBA colors, providing opaque colors for borders and text,
- * ensuring they are clearly visible against the image.
- */
-const SOLID_COLORS = ['red', 'blue', 'green', 'yellow', 'magenta', 'cyan', 'purple', 'orange']
+const downloadBlob = ({ blob, name }: { blob: Blob; name: string }) => {
+  saveAs(blob, name)
+}
 
 /**
  * @constant {PaintOptions[]} PAINT_OPTIONS
@@ -99,8 +83,6 @@ export const PAINT_OPTIONS: PaintOptions[] = [
   { id: DrawTools.Arrow, label: 'Arrow', icon: ArrowOutwardOutlinedIcon, disabled: true },
   { id: DrawTools.Eraser, label: 'Eraser', icon: AdUnitsOutlinedIcon, disabled: true },
 ]
-
-// --- Property Types ---
 
 /**
  * @typedef {Object} downloadURIProps
@@ -152,10 +134,8 @@ type AppDrawerStageProps = {
   selectedImage: ImageWithRects | null // The currently selected image for editing
   onSetSelectedImage: (image: ImageWithRects) => void // Callback to change the selected image
   onUpdateImageRects: (updatedImage: ImageWithRects) => void // Callback to update the rectangles for an image
-  onSetExportFunction: (exportFn: () => void) => void // Callback to pass the export function to the parent
+  onSetExportFunction: (exportFn: (exportType: 'image' | 'yolo') => void) => void // Callback to pass the export function to the parent
 }
-
-// --- Main Component: AppDrawerStage ---
 
 export const AppDrawerStage = ({
   images,
@@ -164,8 +144,6 @@ export const AppDrawerStage = ({
   onSetExportFunction,
   onSetSelectedImage,
 }: AppDrawerStageProps) => {
-  // --- Component States ---
-
   /**
    * @state {CurrentDrawTool} currentTool
    * @description Stores the currently selected drawing tool by the user.
@@ -201,7 +179,7 @@ export const AppDrawerStage = ({
    * Allows the user to zoom in or out of the image view,
    * which is essential for detailed annotation work.
    */
-  const [scale, setScale] = useState(0.5) // Initial zoom. A value of 0.5 makes the image start smaller than the stage.
+  const [scale, setScale] = useState(0.5)
 
   /**
    * @state {number} stageX
@@ -223,8 +201,6 @@ export const AppDrawerStage = ({
   const theme = useTheme()
   const { classItems, classItemSelected } = useDrawerContext()
   const { showMessage } = useSnackbar()
-
-  // --- DOM and Konva References ---
 
   /**
    * @ref {Konva.Stage | null} stageRef
@@ -262,30 +238,78 @@ export const AppDrawerStage = ({
    */
   const [crosshairPos, setCrosshairPos] = useState<{ x: number; y: number } | null>(null)
 
-  // --- Logic Functions ---
-
   /**
-   * @function exportCanvas
-   * @description Memoized function to export the current content of the Konva Stage as a PNG image.
+   * @function exportAnnotations
+   * @description Handles the export of canvas content (PNG) or YOLO annotations (ZIP).
+   * @param {('image' | 'yolo')} exportType - The desired export type.
    * Why is this added?
-   * It is a crucial functionality for the user to save their annotation work.
-   * `useCallback` is used for optimization, preventing the function from being recreated on each render,
-   * unless `selectedImage` changes.
+   * Consolidates the export logic, allowing the component to handle different export formats
+   * based on user selection in AppDrawerPanel.
    */
-  const exportCanvas = useCallback(() => {
-    if (!stageRef.current) {
-      showMessage('No drawing stage found to export.')
-      return
-    }
-    // Converts the Stage to a data URL (Base64 PNG) with a pixelRatio of 3 for higher quality
-    const dataUri = stageRef.current.toDataURL({ pixelRatio: 3 })
-    downloadURI({
-      uri: dataUri,
-      name: `annotated_${selectedImage?.image.src.split('/').pop() || 'image'}.png`, // File name based on the original image
-    })
-  }, [selectedImage?.image.src, showMessage]) // Depends on selectedImage for the file name
+  const exportAnnotations = useCallback(
+    async (exportType: 'image' | 'yolo') => {
+      if (!selectedImage || !stageRef.current) {
+        showMessage('No image selected or drawing stage not found to export.')
+        return
+      }
 
-  // --- Mouse Event Handlers ---
+      if (exportType === 'image') {
+        const dataUri = stageRef.current.toDataURL({ pixelRatio: 3 })
+        downloadURI({
+          uri: dataUri,
+          name: `annotated_${selectedImage?.image.src.split('/').pop()?.split('.')[0] || 'image'}.png`,
+        })
+        showMessage('Image successfully exported as PNG!')
+      } else if (exportType === 'yolo') {
+        const zip = new JSZip()
+        let annotationsExist = false
+
+        images.forEach((img) => {
+          if (img.rects.length > 0) {
+            annotationsExist = true
+            const imageFileName = img.image.src.split('/').pop()?.split('.')[0] || `image_${img.id}`
+            let yoloContent = ''
+
+            img.rects.forEach((rect) => {
+              const classDef = classItems.find((c) => c.id === rect.classId)
+              if (!classDef) {
+                console.warn(`Class definition not found for rect with classId: ${rect.classId}`)
+                return //Skip this rectangle if the class definition is not found
+              }
+
+              const classId = classDef.id
+
+              // Normalization of coordinates to YOLO format
+              // x_center = (x + width / 2) / image_width
+              // y_center = (y + height / 2) / image_height
+              // width_normalized = width / image_width
+              // height_normalized = height / image_height
+
+              const x_center = (rect.x + rect.width / 2) / img.image.width
+              const y_center = (rect.y + rect.height / 2) / img.image.height
+              const width_normalized = rect.width / img.image.width
+              const height_normalized = rect.height / img.image.height
+
+              // Format to 6 decimal places for accuracy
+              yoloContent += `${classId} ${x_center.toFixed(6)} ${y_center.toFixed(6)} ${width_normalized.toFixed(6)} ${height_normalized.toFixed(6)}\n`
+            })
+            zip.file(`${imageFileName}.txt`, yoloContent)
+          }
+        })
+
+        if (!annotationsExist) {
+          showMessage('No annotated rectangles found for export in YOLO format')
+          return
+        }
+
+        const zipFileName = 'yolo_annotations.zip'
+        const blob = await zip.generateAsync({ type: 'blob' })
+        downloadBlob({ blob, name: zipFileName })
+        showMessage('YOLO notes successfully exported as ZIP!')
+      }
+    },
+    [selectedImage, images, classItems, showMessage]
+  )
 
   /**
    * @function handleMouseDown
@@ -306,7 +330,7 @@ export const AppDrawerStage = ({
 
     // Prevents drawing if no label is provided.
     if (classItemSelected === -1) {
-      showMessage('Please enter a label for the rectangle before drawing.')
+      showMessage('Please enter a class for the rectangle before drawing.')
       return
     }
 
@@ -326,21 +350,24 @@ export const AppDrawerStage = ({
 
     setIsDrawing(true) // Activates the drawing flag.
 
-    // Selects random colors for the new rectangle.
-    const randomIndex = Math.floor(Math.random() * RGBA_COLORS.length)
-    const randomRgbaColor = RGBA_COLORS[randomIndex]
-    const randomSolidColor = SOLID_COLORS[randomIndex]
+    // Gets the colors of the selected class from the context
+    const selectedClass = classItems.find((c) => c.id === classItemSelected)
+    if (!selectedClass) {
+      showMessage('Selected class not found. Please select a valid class.')
+      setIsDrawing(false) // Prevents drawing if the class is invalid
+      return
+    }
 
-    // Initializes `newRect` with starting coordinates and a unique ID.
     const newRect: RectShape = {
-      x: pos.x, // Initial X coordinate of the rectangle in the Layer.
-      y: pos.y, // Initial Y coordinate of the rectangle in the Layer.
+      x: pos.x,
+      y: pos.y,
       width: 0,
       height: 0,
-      label: classItems[classItemSelected],
+      label: selectedClass.name,
+      classId: selectedClass.id,
       id: `rect-${uuidv4()}`,
-      color: randomRgbaColor,
-      solidColor: randomSolidColor,
+      color: selectedClass.rgbaColor,
+      solidColor: selectedClass.solidBorderColor,
     }
     setNewRect(newRect)
   }
@@ -435,6 +462,8 @@ export const AppDrawerStage = ({
       // want to move or resize that rectangle (or others). Switching the tool to 'Select'
       // automatically improves the user experience, making the workflow more efficient.
       setCurrentTool(DrawTools.Select)
+    } else {
+      showMessage('Rectangle too small. Draw a larger rectangle.')
     }
 
     setNewRect(null) // Clears the `newRect` state, removing it from rendering.
@@ -500,8 +529,8 @@ export const AppDrawerStage = ({
    * `exportCanvas` is a dependency because it is the function being passed.
    */
   useEffect(() => {
-    onSetExportFunction(exportCanvas)
-  }, [onSetExportFunction, exportCanvas])
+    onSetExportFunction(exportAnnotations)
+  }, [onSetExportFunction, exportAnnotations])
 
   /**
    * @effect

@@ -1,5 +1,5 @@
 import AddIcon from '@mui/icons-material/Add'
-import { Box, Button, Divider, Grid, Paper, Typography } from '@mui/material'
+import { Box, Button, Divider, Grid, Menu, MenuItem, Paper, Typography } from '@mui/material'
 import { useCallback, useState } from 'react'
 import { useDrawerContext } from '../pages/Training'
 import { AppCheckboxList } from './commons/AppCheckBoxList'
@@ -8,12 +8,15 @@ import { AppRectList } from './commons/AppRectList'
 import { GridStyled } from './muiStyled/GridStyled'
 
 type AppDrawerPanelProps = {
-  onHandleExporting: () => void
+  onHandleExporting: (exportType: 'image' | 'yolo') => void
   onHandleUploading: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDrawerPanelProps) => {
-  const [name, setName] = useState('')
+  const [newClassName, setNewClassName] = useState('')
+  // State to control the export menu
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const openExportMenu = Boolean(anchorEl)
 
   const { handleAddClassItem, images } = useDrawerContext()
 
@@ -26,8 +29,23 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
   }, [images])
 
   const handleAddClass = () => {
-    handleAddClassItem(name)
-    setName('')
+    if (newClassName.trim()) {
+      handleAddClassItem({ name: newClassName.trim() })
+      setNewClassName('')
+    }
+  }
+
+  const handleExportMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleExportMenuClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleExportOptionClick = (exportType: 'image' | 'yolo') => {
+    onHandleExporting(exportType)
+    handleExportMenuClose()
   }
 
   return (
@@ -36,13 +54,13 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
       <GridStyled container spacing={0} flexDirection={'column'} sx={{ borderRadius: '8px 0 0 0' }}>
         <Grid padding={1}>
           <AppInputWihtIcon
-            disabled={name.length === 0}
-            value={name}
+            disabled={newClassName.length === 0}
+            value={newClassName}
             icon={<AddIcon />}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setName(event.target.value)
+              setNewClassName(event.target.value)
             }}
-            handleButtonClick={() => handleAddClass()}
+            handleButtonClick={handleAddClass}
           />
           <AppCheckboxList />
         </Grid>
@@ -65,8 +83,35 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
         <Paper sx={{ height: '100%', padding: 1 }}>
           <Grid container display={'flex'} flexDirection={'column'}>
             <Grid sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption">Export Current Image</Typography>
-              <Button onClick={onHandleExporting}>Export</Button>
+              <Typography variant="caption">Export</Typography>
+              <Button
+                id="export-button"
+                size="small"
+                aria-controls={openExportMenu ? 'export-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={openExportMenu ? 'true' : undefined}
+                onClick={handleExportMenuClick}
+                variant="outlined"
+                disabled={images.length === 0}
+              >
+                Export
+              </Button>
+              <Menu
+                id="export-menu"
+                anchorEl={anchorEl}
+                open={openExportMenu}
+                onClose={handleExportMenuClose}
+                MenuListProps={{
+                  'aria-labelledby': 'export-button',
+                }}
+              >
+                <MenuItem onClick={() => handleExportOptionClick('image')}>
+                  Export Image (PNG)
+                </MenuItem>
+                <MenuItem onClick={() => handleExportOptionClick('yolo')}>
+                  Export Anotations (YOLO)
+                </MenuItem>
+              </Menu>
             </Grid>
             <Divider sx={{ marginY: 1 }} />
             <Grid>
@@ -80,7 +125,7 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
                   id="image-upload-input"
                 />
                 <label style={{ width: '100%' }} htmlFor="image-upload-input">
-                  <Button fullWidth variant="outlined" component="span">
+                  <Button size="small" fullWidth variant="outlined" component="span">
                     Upload
                   </Button>
                 </label>

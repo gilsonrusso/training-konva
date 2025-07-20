@@ -4,6 +4,7 @@ export interface RectShape {
   width: number
   height: number
   label: string
+  classId: number
   id: string
   color?: string
   solidColor?: string
@@ -15,31 +16,9 @@ export type ImageWithRects = {
   rects: RectShape[]
 }
 
-export interface CircleShape {
-  x: number
-  y: number
-  radius: number
-  label: string
-  id: string
-}
-
-export interface ArrowShape {
-  startX: number
-  startY: number
-  endX: number
-  endY: number
-  label: string
-  id: string
-}
-
-export interface BrushShape {
-  points: { x: number; y: number }[]
-  label: string
-  id: string
-}
-
-export interface EraserShape {
-  points: { x: number; y: number }[]
-  label: string
-  id: string
+export interface ClassDefinition {
+  id: number
+  name: string
+  rgbaColor: string
+  solidBorderColor: string
 }

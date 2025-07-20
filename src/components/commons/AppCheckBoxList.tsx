@@ -38,16 +38,16 @@ export const AppCheckboxList = () => {
         </>
       )}
 
-      {classItems.map((value, index) => {
-        const labelId = `checkbox-list-label-${value}`
+      {classItems.map(({ id, name }, index) => {
+        const labelId = `checkbox-list-label-${id}`
 
         return (
           <ListItem
             dense
-            key={value}
+            key={id}
             secondaryAction={
               <IconButton
-                onClick={() => handleDeleteClassItem(index)}
+                onClick={() => handleDeleteClassItem(id)}
                 edge="end"
                 aria-label="comments"
               >
@@ -66,7 +66,7 @@ export const AppCheckboxList = () => {
                   inputProps={{ 'aria-labelledby': labelId }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`${value}`} />
+              <ListItemText id={labelId} primary={`${name}`} />
             </ListItemButton>
           </ListItem>
         )
