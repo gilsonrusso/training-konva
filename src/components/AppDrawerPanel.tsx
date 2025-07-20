@@ -1,6 +1,6 @@
 import AddIcon from '@mui/icons-material/Add'
-import { Box, Button, Grid, Typography } from '@mui/material'
-import { useState } from 'react'
+import { Box, Button, Divider, Grid, Paper, Typography } from '@mui/material'
+import { useCallback, useState } from 'react'
 import { useDrawerContext } from '../pages/Drawer'
 import { AppCheckboxList } from './commons/AppCheckBoxList'
 import { AppInputWihtIcon } from './commons/AppInputWithIcon'
@@ -15,7 +15,15 @@ type AppDrawerPanelProps = {
 export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDrawerPanelProps) => {
   const [name, setName] = useState('')
 
-  const { handleAddClassItem } = useDrawerContext()
+  const { handleAddClassItem, images } = useDrawerContext()
+
+  const numberImagesLoaded = useCallback(() => {
+    return images?.length || 0
+  }, [images])
+
+  const numberRectsCreated = useCallback(() => {
+    return images.reduce((acc, rect) => acc + rect.rects.length, 0)
+  }, [images])
 
   const handleAddClass = () => {
     handleAddClassItem(name)
@@ -24,6 +32,7 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
 
   return (
     <Grid container spacing={0.5} flexDirection={'column'} size={{ xs: 12, sm: 12, md: 3 }}>
+      {/* Classes List - Section  */}
       <GridStyled container spacing={0} flexDirection={'column'} sx={{ borderRadius: '8px 0 0 0' }}>
         <Grid padding={1}>
           <AppInputWihtIcon
@@ -38,6 +47,8 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
           <AppCheckboxList />
         </Grid>
       </GridStyled>
+      {/* Rect List - Section  */}
+
       <GridStyled
         container
         // sx={{ maxHeight: '288px' }}
@@ -47,56 +58,59 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
       >
         <Box padding={1} flexGrow={1}>
           <AppRectList />
-          {/* {!rects || rects.length === 0 ? (
-            <>
-              <Typography variant="body2" color="text.secondary">
-                {imageName
-                  ? `Nenhum retângulo para ${imageName}.`
-                  : 'Nenhum retângulo selecionado.'}
-              </Typography>
-            </>
-          ) : (
-            <>
-              <Typography variant="h6" gutterBottom>
-                {imageName ? `Retângulos em: ${imageName}` : 'Retângulos da Imagem Selecionada'}
-              </Typography>
-              <List dense>
-                {rects.map((rect) => (
-                  <ListItem key={rect.id}>
-                    <ListItemText
-                      primary={`Label: ${rect.label}`}
-                      secondary={`Dimensões: ${rect.width.toFixed(0)}x${rect.height.toFixed(0)} | Posição: (X: ${rect.x.toFixed(0)}, Y: ${rect.y.toFixed(0)})`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </>
-          )} */}
         </Box>
       </GridStyled>
-
+      {/* Export | Upload - Section  */}
+      <GridStyled sx={{ maxHeight: '170px', padding: '4px' }} flexGrow={1}>
+        <Paper sx={{ height: '100%', padding: 1 }}>
+          <Grid container display={'flex'} flexDirection={'column'}>
+            <Grid sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="caption">Export Current Image</Typography>
+              <Button onClick={onHandleExporting}>Export</Button>
+            </Grid>
+            <Divider sx={{ marginY: 1 }} />
+            <Grid>
+              <Box sx={{ display: 'flex', width: '100%' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={onHandleUploading}
+                  style={{ display: 'none' }}
+                  id="image-upload-input"
+                />
+                <label style={{ width: '100%' }} htmlFor="image-upload-input">
+                  <Button fullWidth variant="outlined" component="span">
+                    Upload
+                  </Button>
+                </label>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+      </GridStyled>
+      {/* Summary - Section  */}
       <GridStyled
-        sx={{ borderRadius: '0 0 0 8px', maxHeight: '170px', padding: '4px' }}
+        sx={{ borderRadius: '0 0 0 8px', maxHeight: '80px', padding: '4px' }}
         flexGrow={1}
       >
-        <Typography>Resumo:</Typography>
-        <Button onClick={onHandleExporting}>Export</Button>
-        <Box>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={onHandleUploading}
-            style={{ display: 'none' }}
-            id="image-upload-input"
-          />
-          <label htmlFor="image-upload-input">
-            <Button variant="contained" component="span">
-              Upload
-            </Button>
-          </label>
-        </Box>
-        <Button>Training</Button>
+        <Paper sx={{ height: '100%', padding: 1 }}>
+          <Typography variant="caption">Summary</Typography>
+          <Grid
+            container
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}
+          >
+            <Grid sx={{ display: 'flex', gap: 5 }}>
+              <Typography variant="body2">{`Images: ${numberImagesLoaded() || 0}`}</Typography>
+              <Typography variant="body2">{`Rects: ${numberRectsCreated() || 0}`}</Typography>
+            </Grid>
+            <Grid sx={{ display: 'flex', alignItems: 'flex-end' }}>
+              <Button size="small" variant="contained">
+                Training
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
       </GridStyled>
     </Grid>
   )

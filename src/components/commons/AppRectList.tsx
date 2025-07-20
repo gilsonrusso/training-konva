@@ -7,7 +7,7 @@ import ListItemText from '@mui/material/ListItemText'
 import { useDrawerContext } from '../../pages/Drawer'
 
 export const AppRectList = () => {
-  const { selectedImage } = useDrawerContext()
+  const { selectedImage, handlerDeleteRectangle } = useDrawerContext()
 
   return (
     <List
@@ -42,7 +42,9 @@ export const AppRectList = () => {
               key={rect.id}
               secondaryAction={
                 <IconButton
-                  // onClick={() => handleDeleteClassItem(index)}
+                  onClick={() =>
+                    handlerDeleteRectangle({ imageId: selectedImage.id, rectId: rect.id })
+                  }
                   edge="end"
                   aria-label="comments"
                 >

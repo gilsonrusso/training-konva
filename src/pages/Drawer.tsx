@@ -10,13 +10,20 @@ const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
   height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - ${105}px)`,
 }))
 
+type DeleteRectangleProps = {
+  imageId: string
+  rectId: string
+}
+
 type DrawerContextType = {
   selectedImage: ImageWithRects | null
   classItemSelected: number
   classItems: string[]
+  images: ImageWithRects[]
   handleSetClassItem: (valuer: number) => void
   handleAddClassItem: (value: string) => void
   handleDeleteClassItem: (value: number) => void
+  handlerDeleteRectangle: ({ imageId, rectId }: DeleteRectangleProps) => void
 }
 
 const DrawerContext = createContext({} as DrawerContextType)
@@ -49,6 +56,21 @@ export const DrawerPage = () => {
         alert('Não foi possível carregar a imagem.')
       }
     })
+  }
+
+  const handlerDeleteRectangle = ({ imageId, rectId }: DeleteRectangleProps) => {
+    const newImagesArr = images.map((img) => {
+      if (img.id === imageId) {
+        const newImg = {
+          ...img,
+          rects: img.rects.filter(({ id }) => id !== rectId),
+        }
+        setSelectedImage(newImg)
+        return newImg
+      }
+      return img
+    })
+    setImages(newImagesArr)
   }
 
   const handleAddClassItem = (value: string) => {
@@ -107,9 +129,11 @@ export const DrawerPage = () => {
           classItems,
           classItemSelected,
           selectedImage,
+          images,
           handleAddClassItem,
           handleSetClassItem,
           handleDeleteClassItem,
+          handlerDeleteRectangle,
         }}
       >
         <GridStyled container spacing={0.5} columns={12}>
