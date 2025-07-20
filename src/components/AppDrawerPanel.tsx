@@ -1,14 +1,15 @@
-import PlusOneOutlinedIcon from '@mui/icons-material/PlusOneOutlined'
-import { Box, Button, Divider, Grid, List, ListItem, ListItemText, Typography } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import { Box, Button, Grid, List, ListItem, ListItemText, Typography } from '@mui/material'
+import { useState } from 'react'
+import { useDrawerContext } from '../pages/Drawer'
 import type { RectShape } from '../types/Shapes'
+import { AppCheckboxList } from './commons/AppCheckBoxList'
 import { AppInputWihtIcon } from './commons/AppInputWithIcon'
 import { GridStyled } from './muiStyled/GridStyled'
 
 type AppDrawerPanelProps = {
   rects: RectShape[]
   imageName?: string
-  currentLabel: string
-  onHandleCurrentLabel: (value: string) => void
   onHandleExporting: () => void
   onHandleUploading: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
@@ -16,28 +17,35 @@ type AppDrawerPanelProps = {
 export const AppDrawerPanel = ({
   rects,
   imageName,
-  currentLabel,
-  onHandleCurrentLabel,
   onHandleExporting,
   onHandleUploading,
 }: AppDrawerPanelProps) => {
+  const [name, setName] = useState('')
+
+  const { handleAddClassItem } = useDrawerContext()
+
+  const handleAddClass = () => {
+    handleAddClassItem(name)
+    setName('')
+  }
+
   return (
     <Grid container spacing={0.5} flexDirection={'column'} size={{ xs: 12, sm: 12, md: 3 }}>
-      <GridStyled
-        container
-        spacing={0}
-        flexDirection={'column'}
-        flexGrow={3}
-        sx={{ borderRadius: '8px 0 0 0' }}
-      >
-        <Grid padding={1} flexGrow={1}>
+      <GridStyled container spacing={0} flexDirection={'column'} sx={{ borderRadius: '8px 0 0 0' }}>
+        <Grid padding={1}>
           <AppInputWihtIcon
-            icon={<PlusOneOutlinedIcon />}
-            value={currentLabel}
-            onChange={(e) => onHandleCurrentLabel(e.target.value)}
+            value={name}
+            icon={<AddIcon />}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setName(event.target.value)
+            }}
+            handleButtonClick={() => handleAddClass()}
           />
+
+          <AppCheckboxList />
         </Grid>
-        <Divider />
+      </GridStyled>
+      <GridStyled container spacing={0} flexDirection={'column'} flexGrow={3}>
         <Grid padding={1} flexGrow={1}>
           {!rects || rects.length === 0 ? (
             <>
@@ -66,6 +74,7 @@ export const AppDrawerPanel = ({
           )}
         </Grid>
       </GridStyled>
+
       <GridStyled
         sx={{ borderRadius: '0 0 0 8px', maxHeight: '170px', padding: '4px' }}
         flexGrow={1}

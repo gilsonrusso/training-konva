@@ -20,7 +20,7 @@ Este projeto **não possui backend** e é voltado apenas para a interface (front
 - [Vite](https://vitejs.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [MUI (Material UI)](https://mui.com/)
-- [React Icons](https://react-icons.github.io/react-icons/) *(opcional para ícones adicionais)*
+- [React Icons](https://react-icons.github.io/react-icons/) _(opcional para ícones adicionais)_
 
 ---
 

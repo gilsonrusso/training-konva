@@ -1,5 +1,5 @@
 import { Box, Grid, styled, type GridProps } from '@mui/material'
-import { useRef, useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { AppDrawerPanel } from '../components/AppDrawerPanel'
 import { AppDrawerStage } from '../components/AppDrawerStage'
@@ -9,10 +9,22 @@ const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
   height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - ${105}px)`,
 }))
 
+type DrawerContextType = {
+  classItemSelected: number
+  classItems: string[]
+  handleSetClassItem: (valuer: number) => void
+  handleAddClassItem: (value: string) => void
+  handleDeleteClassItem: (value: number) => void
+}
+
+const DrawerContext = createContext({} as DrawerContextType)
+
 export const DrawerPage = () => {
-  const [currentLabel, setCurrentLabel] = useState<string>('')
   const [images, setImages] = useState<ImageWithRects[]>([])
   const [selectedImage, setSelectedImage] = useState<ImageWithRects | null>(null)
+
+  const [classItemSelected, setClassItemSelected] = useState<number>(-1)
+  const [classItems, setClassItems] = useState<string[]>([])
 
   const appDrawerExportRef = useRef<(() => void) | null>(null)
 
@@ -33,6 +45,34 @@ export const DrawerPage = () => {
         alert('Não foi possível carregar a imagem.')
       }
     })
+  }
+
+  const handleAddClassItem = (value: string) => {
+    const valueSanitized = value.trim().toLowerCase()
+
+    const foundIndex = classItems.findIndex((item) => item === valueSanitized)
+    if (foundIndex !== -1) return
+
+    const newClassItems = [...classItems]
+    newClassItems.push(valueSanitized)
+
+    setClassItems(newClassItems)
+  }
+
+  const handleDeleteClassItem = (index: number) => {
+    const newClassItems = [...classItems]
+
+    if (index === classItemSelected) {
+      setClassItemSelected(-1)
+    }
+
+    newClassItems.splice(index, 1)
+
+    setClassItems(newClassItems)
+  }
+
+  const handleSetClassItem = (index: number) => {
+    setClassItemSelected((prev) => (prev === index ? -1 : index))
   }
 
   // A função onExportClick agora chamará a função exposta pelo AppDrawer
@@ -66,27 +106,35 @@ export const DrawerPage = () => {
           </Button> */}
         </Grid>
       </Grid>
-      <GridStyled container spacing={0.5} columns={12}>
-        <AppDrawerPanel
-          rects={selectedImage ? selectedImage.rects : []}
-          currentLabel={currentLabel}
-          onHandleCurrentLabel={setCurrentLabel}
-          imageName={selectedImage?.image.src.split('/').pop()}
-          onHandleExporting={onExportClick}
-          onHandleUploading={handleImageUpload}
-        />
-        <AppDrawerStage
-          selectedImage={selectedImage}
-          onUpdateImageRects={handleUpdateImageRects}
-          currentLabel={currentLabel}
-          onSetCurrentLabel={setCurrentLabel}
-          onSetExportFunction={(exportFn) => {
-            appDrawerExportRef.current = exportFn
-          }}
-          images={images}
-          onSetSelectedImage={setSelectedImage}
-        />
-      </GridStyled>
+      <DrawerContext
+        value={{
+          classItemSelected,
+          classItems,
+          handleAddClassItem,
+          handleSetClassItem,
+          handleDeleteClassItem,
+        }}
+      >
+        <GridStyled container spacing={0.5} columns={12}>
+          <AppDrawerPanel
+            rects={selectedImage ? selectedImage.rects : []}
+            imageName={selectedImage?.image.src.split('/').pop()}
+            onHandleExporting={onExportClick}
+            onHandleUploading={handleImageUpload}
+          />
+          <AppDrawerStage
+            selectedImage={selectedImage}
+            onUpdateImageRects={handleUpdateImageRects}
+            onSetExportFunction={(exportFn) => {
+              appDrawerExportRef.current = exportFn
+            }}
+            images={images}
+            onSetSelectedImage={setSelectedImage}
+          />
+        </GridStyled>
+      </DrawerContext>
     </Box>
   )
 }
+
+export const useDrawerContext = () => useContext(DrawerContext)

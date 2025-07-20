@@ -5,9 +5,14 @@ import type { ReactElement } from 'react'
 
 type AppInputWihtIconProps = InputBaseProps & {
   icon: ReactElement
+  handleButtonClick: () => void
 }
 
-export const AppInputWihtIcon = ({ icon: Icon, ...rest }: AppInputWihtIconProps) => {
+export const AppInputWihtIcon = ({
+  icon: Icon,
+  handleButtonClick,
+  ...rest
+}: AppInputWihtIconProps) => {
   return (
     <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center' }}>
       <InputBase
@@ -16,7 +21,7 @@ export const AppInputWihtIcon = ({ icon: Icon, ...rest }: AppInputWihtIconProps)
         placeholder="Add Class"
         inputProps={{ 'aria-label': 'add class' }}
       />
-      <IconButton type="button" sx={{ p: '10px' }} aria-label="class">
+      <IconButton onClick={handleButtonClick} type="button" sx={{ p: '10px' }} aria-label="class">
         {Icon}
       </IconButton>
     </Paper>

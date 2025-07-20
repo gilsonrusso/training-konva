@@ -16,6 +16,8 @@ import {
   Stage,
 } from 'react-konva' // Konva components for drawing on the canvas
 import { v4 as uuidv4 } from 'uuid' // For generating unique IDs for rectangles
+import { useSnackbar } from '../contexts/SnackBarContext'
+import { useDrawerContext } from '../pages/Drawer'
 import type { ImageWithRects, RectShape } from '../types/Shapes' // Custom types for images and shapes
 import { ImageCarousel } from './commons/AppCarouselImage' // Component to display the image carousel
 import { GridStyled } from './muiStyled/GridStyled' // Styled Grid component from Material-UI
@@ -90,12 +92,12 @@ const SOLID_COLORS = ['red', 'blue', 'green', 'yellow', 'magenta', 'cyan', 'purp
  * associating an ID, a label, and an icon for each tool.
  */
 export const PAINT_OPTIONS: PaintOptions[] = [
-  { id: DrawTools.Select, label: 'Select', icon: AdsClickOutlinedIcon },
-  { id: DrawTools.Rectangle, label: 'Rectangle', icon: Crop54Icon },
-  { id: DrawTools.Circle, label: 'Circle', icon: CircleOutlinedIcon },
-  { id: DrawTools.Brush, label: 'Free Draw', icon: GestureOutlinedIcon },
-  { id: DrawTools.Arrow, label: 'Arrow', icon: ArrowOutwardOutlinedIcon },
-  { id: DrawTools.Eraser, label: 'Eraser', icon: AdUnitsOutlinedIcon },
+  { id: DrawTools.Select, label: 'Select', icon: AdsClickOutlinedIcon, disabled: false },
+  { id: DrawTools.Rectangle, label: 'Rectangle', icon: Crop54Icon, disabled: false },
+  { id: DrawTools.Circle, label: 'Circle', icon: CircleOutlinedIcon, disabled: true },
+  { id: DrawTools.Brush, label: 'Free Draw', icon: GestureOutlinedIcon, disabled: true },
+  { id: DrawTools.Arrow, label: 'Arrow', icon: ArrowOutwardOutlinedIcon, disabled: true },
+  { id: DrawTools.Eraser, label: 'Eraser', icon: AdUnitsOutlinedIcon, disabled: true },
 ]
 
 // --- Property Types ---
@@ -126,6 +128,7 @@ type PaintOptions = {
   label: string
   icon: ElementType
   color?: string
+  disabled: boolean
 }
 
 /**
@@ -147,10 +150,8 @@ type CurrentDrawTool = (typeof DrawTools)[keyof typeof DrawTools]
 type AppDrawerStageProps = {
   images: ImageWithRects[] // List of all loaded images
   selectedImage: ImageWithRects | null // The currently selected image for editing
-  currentLabel: string // The current label to be applied to new rectangles
   onSetSelectedImage: (image: ImageWithRects) => void // Callback to change the selected image
   onUpdateImageRects: (updatedImage: ImageWithRects) => void // Callback to update the rectangles for an image
-  onSetCurrentLabel: (label: string) => void // Callback to update the current label
   onSetExportFunction: (exportFn: () => void) => void // Callback to pass the export function to the parent
 }
 
@@ -158,10 +159,8 @@ type AppDrawerStageProps = {
 
 export const AppDrawerStage = ({
   images,
-  currentLabel,
   selectedImage,
   onUpdateImageRects,
-  onSetCurrentLabel,
   onSetExportFunction,
   onSetSelectedImage,
 }: AppDrawerStageProps) => {
@@ -222,6 +221,8 @@ export const AppDrawerStage = ({
   const [stageY, setStageY] = useState(0)
 
   const theme = useTheme()
+  const { classItems, classItemSelected } = useDrawerContext()
+  const { showMessage } = useSnackbar()
 
   // --- DOM and Konva References ---
 
@@ -273,7 +274,7 @@ export const AppDrawerStage = ({
    */
   const exportCanvas = useCallback(() => {
     if (!stageRef.current) {
-      alert('No drawing stage found to export.')
+      showMessage('No drawing stage found to export.')
       return
     }
     // Converts the Stage to a data URL (Base64 PNG) with a pixelRatio of 3 for higher quality
@@ -282,7 +283,7 @@ export const AppDrawerStage = ({
       uri: dataUri,
       name: `annotated_${selectedImage?.image.src.split('/').pop() || 'image'}.png`, // File name based on the original image
     })
-  }, [selectedImage]) // Depends on selectedImage for the file name
+  }, [selectedImage?.image.src, showMessage]) // Depends on selectedImage for the file name
 
   // --- Mouse Event Handlers ---
 
@@ -304,8 +305,8 @@ export const AppDrawerStage = ({
     }
 
     // Prevents drawing if no label is provided.
-    if (!currentLabel.trim()) {
-      alert('Please enter a label for the rectangle before drawing.')
+    if (classItemSelected === -1) {
+      showMessage('Please enter a label for the rectangle before drawing.')
       return
     }
 
@@ -336,7 +337,7 @@ export const AppDrawerStage = ({
       y: pos.y, // Initial Y coordinate of the rectangle in the Layer.
       width: 0,
       height: 0,
-      label: currentLabel,
+      label: classItems[classItemSelected],
       id: `rect-${uuidv4()}`,
       color: randomRgbaColor,
       solidColor: randomSolidColor,
@@ -437,7 +438,6 @@ export const AppDrawerStage = ({
     }
 
     setNewRect(null) // Clears the `newRect` state, removing it from rendering.
-    onSetCurrentLabel('') // Clears the label so the next drawing requires a new label.
   }
 
   /**
