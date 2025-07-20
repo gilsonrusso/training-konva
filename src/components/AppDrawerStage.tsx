@@ -17,7 +17,7 @@ import {
 } from 'react-konva' // Konva components for drawing on the canvas
 import { v4 as uuidv4 } from 'uuid' // For generating unique IDs for rectangles
 import { useSnackbar } from '../contexts/SnackBarContext'
-import { useDrawerContext } from '../pages/Drawer'
+import { useDrawerContext } from '../pages/Training'
 import type { ImageWithRects, RectShape } from '../types/Shapes' // Custom types for images and shapes
 import { ImageCarousel } from './commons/AppCarouselImage' // Component to display the image carousel
 import { GridStyled } from './muiStyled/GridStyled' // Styled Grid component from Material-UI

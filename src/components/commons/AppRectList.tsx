@@ -4,7 +4,7 @@ import IconButton from '@mui/material/IconButton'
 import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import ListItemText from '@mui/material/ListItemText'
-import { useDrawerContext } from '../../pages/Drawer'
+import { useDrawerContext } from '../../pages/Training'
 
 export const AppRectList = () => {
   const { selectedImage, handlerDeleteRectangle } = useDrawerContext()

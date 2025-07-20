@@ -1,11 +1,9 @@
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
-import AppsIcon from '@mui/icons-material/Apps'
 import MenuIcon from '@mui/icons-material/Menu'
-import VideoCallIcon from '@mui/icons-material/VideoCall'
 import {
   AppBar,
   Box,
-  Button,
+  Grid,
   IconButton,
   // ListItem,
   // ListItemText,
@@ -17,9 +15,11 @@ import {
 } from '@mui/material'
 import { styled, useTheme } from '@mui/material/styles'
 
-import MoreVertIcon from '@mui/icons-material/MoreVert'
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
+import HomeIcon from '@mui/icons-material/Home'
+import TableViewIcon from '@mui/icons-material/TableView'
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router'
+import { Link, Outlet } from 'react-router'
 import { UserService } from './services/userServices'
 import type { User } from './types/user.types'
 
@@ -34,33 +34,6 @@ const IconButtonStyled = styled(IconButton)<IconButtonProps>(() => ({
 const AppBarStyled = styled(AppBar)<AppBarProps>(({ theme }) => ({
   zIndex: theme.zIndex.drawer + 1,
 }))
-
-// const ListItemTextStyled = styled(ListItemText)<ListItemTextProps>(({ theme }) => ({
-//   '& .MuiListItemText-primary': {
-//     fontSize: '0.875rem',
-//     fontWeight: 500,
-//     color: theme.palette.text.primary,
-//   },
-// }))
-
-// const ListItemStyled = styled(ListItem)(({ theme }) => ({
-//   '&.MuiListItem-root': {
-//     padding: theme.spacing(0),
-//     '&:hover': {
-//       backgroundColor: theme.palette.action.hover,
-//     },
-//   },
-// }))
-
-// const ICONS_LIST = [
-//   { icon: <HomeIcon />, text: 'Home' },
-//   { icon: <WhatShotIcon />, text: 'Trending' },
-//   { icon: <SubscriptionsIcon />, text: 'Subscriptions' },
-// ]
-// const ICONS_LIST_2 = [
-//   { icon: <VideoLibrary />, text: 'Library' },
-//   { icon: <History />, text: 'History' },
-// ]
 
 function App() {
   const theme = useTheme()
@@ -92,143 +65,74 @@ function App() {
     }
   }, [])
 
-  console.log('::::::users', users)
-
   return (
     <BoxStyled>
       <AppBarStyled>
         <Toolbar>
-          <IconButton size="large" edge="start" aria-label="menu" sx={{ mr: 2 }}>
-            <MenuIcon />
-          </IconButton>
-          <img
-            src={theme.palette.mode === 'dark' ? '/images/branco.png' : '/images/preto.png'}
-            alt="logo"
-            className="h-7"
-          />
-          <div className="flex-1" />
-          <IconButtonStyled size="large" edge="start" aria-label="menu" sx={{ mr: 2 }}>
-            <VideoCallIcon />
-          </IconButtonStyled>
-          <IconButtonStyled size="large" edge="start" aria-label="menu" sx={{ mr: 2 }}>
-            <AppsIcon />
-          </IconButtonStyled>
-          <IconButtonStyled size="large" edge="start" aria-label="menu" sx={{ mr: 2 }}>
-            <MoreVertIcon />
-          </IconButtonStyled>
-          <Button variant="outlined" color="secondary" startIcon={<AccountCircleIcon />}>
-            Fazer Login
-          </Button>
+          <Grid container sx={{ display: 'flex', width: '100%' }}>
+            <Grid
+              flexGrow={1}
+              sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}
+            >
+              <IconButton size="large" edge="start" aria-label="menu" sx={{ mr: 2 }}>
+                <MenuIcon />
+              </IconButton>
+              <img
+                src={theme.palette.mode === 'dark' ? '/images/logo.png' : '/images/logo.png'}
+                alt="logo"
+                className="h-7"
+              />
+              <Typography sx={{ marginLeft: '5px' }}>Training</Typography>
+            </Grid>
+            <Grid
+              flexGrow={8}
+              sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 5 }}
+            >
+              <Link
+                to={{
+                  pathname: '/',
+                }}
+              >
+                <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <HomeIcon />
+                  <Typography paddingTop={1}>Home</Typography>
+                </Box>
+              </Link>
+              <Link
+                to={{
+                  pathname: '/list',
+                }}
+              >
+                <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <TableViewIcon />
+                  <Typography paddingTop={1}>list</Typography>
+                </Box>
+              </Link>
+              <Link
+                to={{
+                  pathname: '/training',
+                }}
+              >
+                <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <FitnessCenterIcon />
+                  <Typography paddingTop={1}>Training</Typography>
+                </Box>
+              </Link>
+            </Grid>
+            <Grid
+              flexGrow={1}
+              sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}
+            >
+              <IconButtonStyled>
+                <AccountCircleIcon />
+              </IconButtonStyled>
+            </Grid>
+          </Grid>
         </Toolbar>
       </AppBarStyled>
       <Toolbar />
       <Box display={'flex'}>
-        {/* <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-          <Drawer
-            sx={{
-              flexShrink: 0,
-              '& .MuiDrawer-paper': {
-                boxSizing: 'border-box',
-              },
-            }}
-            variant="permanent"
-            anchor="left"
-          >
-            <List>
-              {ICONS_LIST.map(({ icon: Icon, text }) => (
-                <ListItemStyled key={text} disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>{Icon}</ListItemIcon>
-                    <ListItemTextStyled primary={text} />
-                  </ListItemButton>
-                </ListItemStyled>
-              ))}
-            </List>
-            <Divider />
-            <List>
-              {ICONS_LIST_2.map(({ icon: Icon, text }) => (
-                <ListItemStyled key={text} disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>{Icon}</ListItemIcon>
-                    <ListItemTextStyled primary={text} />
-                  </ListItemButton>
-                </ListItemStyled>
-              ))}
-            </List>
-            <Divider />
-            <Box sx={{ padding: 4 }}>
-              <Typography variant="body2">
-                Faça login para curtir vídeos, comentar e se inscrever.
-              </Typography>
-              <Button variant="outlined" color="secondary" startIcon={<AccountCircleIcon />}>
-                Fazer Login
-              </Button>
-            </Box>
-            <Divider />
-            <List
-              component="nav"
-              aria-labelledby="nested-list-subheader"
-              subheader={
-                <ListSubheader component="div" id="nested-list-subheader">
-                  O Melhor do youtube
-                </ListSubheader>
-              }
-            >
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Música'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Esportes'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Jogos'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Filmes'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Notícias'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Ao vivo'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Destaques'} />
-              </ListItemStyled>
-              <ListItemStyled>
-                <ListItemIcon>
-                  <AddCircle />
-                </ListItemIcon>
-                <ListItemText primary={'Videos 360'} />
-              </ListItemStyled>
-            </List>
-          </Drawer>
-        </Box> */}
         <Box sx={{ padding: 4, width: '100%' }}>
-          <Typography color="textPrimary" variant="h5" sx={{ fontWeight: 800 }}>
-            Recomendados
-          </Typography>
           <Outlet />
         </Box>
       </Box>

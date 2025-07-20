@@ -1,7 +1,7 @@
 import AddIcon from '@mui/icons-material/Add'
 import { Box, Button, Divider, Grid, Paper, Typography } from '@mui/material'
 import { useCallback, useState } from 'react'
-import { useDrawerContext } from '../pages/Drawer'
+import { useDrawerContext } from '../pages/Training'
 import { AppCheckboxList } from './commons/AppCheckBoxList'
 import { AppInputWihtIcon } from './commons/AppInputWithIcon'
 import { AppRectList } from './commons/AppRectList'

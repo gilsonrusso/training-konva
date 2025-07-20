@@ -7,7 +7,7 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
-import { useDrawerContext } from '../../pages/Drawer'
+import { useDrawerContext } from '../../pages/Training'
 
 export const AppCheckboxList = () => {
   const { handleSetClassItem, classItemSelected, classItems, handleDeleteClassItem } =

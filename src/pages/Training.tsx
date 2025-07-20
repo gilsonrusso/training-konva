@@ -28,7 +28,7 @@ type DrawerContextType = {
 
 const DrawerContext = createContext({} as DrawerContextType)
 
-export const DrawerPage = () => {
+const TrainingPage = () => {
   const [images, setImages] = useState<ImageWithRects[]>([])
   const [selectedImage, setSelectedImage] = useState<ImageWithRects | null>(null)
 
@@ -154,3 +154,4 @@ export const DrawerPage = () => {
 }
 
 export const useDrawerContext = () => useContext(DrawerContext)
+export default TrainingPage
