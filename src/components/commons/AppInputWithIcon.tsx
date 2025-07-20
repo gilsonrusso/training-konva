@@ -11,6 +11,7 @@ type AppInputWihtIconProps = InputBaseProps & {
 export const AppInputWihtIcon = ({
   icon: Icon,
   handleButtonClick,
+  disabled,
   ...rest
 }: AppInputWihtIconProps) => {
   return (
@@ -21,7 +22,13 @@ export const AppInputWihtIcon = ({
         placeholder="Add Class"
         inputProps={{ 'aria-label': 'add class' }}
       />
-      <IconButton onClick={handleButtonClick} type="button" sx={{ p: '10px' }} aria-label="class">
+      <IconButton
+        disabled={disabled}
+        onClick={handleButtonClick}
+        type="button"
+        sx={{ p: '10px' }}
+        aria-label="class"
+      >
         {Icon}
       </IconButton>
     </Paper>

@@ -1,25 +1,18 @@
 import AddIcon from '@mui/icons-material/Add'
-import { Box, Button, Grid, List, ListItem, ListItemText, Typography } from '@mui/material'
+import { Box, Button, Grid, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useDrawerContext } from '../pages/Drawer'
-import type { RectShape } from '../types/Shapes'
 import { AppCheckboxList } from './commons/AppCheckBoxList'
 import { AppInputWihtIcon } from './commons/AppInputWithIcon'
+import { AppRectList } from './commons/AppRectList'
 import { GridStyled } from './muiStyled/GridStyled'
 
 type AppDrawerPanelProps = {
-  rects: RectShape[]
-  imageName?: string
   onHandleExporting: () => void
   onHandleUploading: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-export const AppDrawerPanel = ({
-  rects,
-  imageName,
-  onHandleExporting,
-  onHandleUploading,
-}: AppDrawerPanelProps) => {
+export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDrawerPanelProps) => {
   const [name, setName] = useState('')
 
   const { handleAddClassItem } = useDrawerContext()
@@ -34,6 +27,7 @@ export const AppDrawerPanel = ({
       <GridStyled container spacing={0} flexDirection={'column'} sx={{ borderRadius: '8px 0 0 0' }}>
         <Grid padding={1}>
           <AppInputWihtIcon
+            disabled={name.length === 0}
             value={name}
             icon={<AddIcon />}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,13 +35,19 @@ export const AppDrawerPanel = ({
             }}
             handleButtonClick={() => handleAddClass()}
           />
-
           <AppCheckboxList />
         </Grid>
       </GridStyled>
-      <GridStyled container spacing={0} flexDirection={'column'} flexGrow={3}>
-        <Grid padding={1} flexGrow={1}>
-          {!rects || rects.length === 0 ? (
+      <GridStyled
+        container
+        // sx={{ maxHeight: '288px' }}
+        spacing={0}
+        flexDirection={'column'}
+        flexGrow={3}
+      >
+        <Box padding={1} flexGrow={1}>
+          <AppRectList />
+          {/* {!rects || rects.length === 0 ? (
             <>
               <Typography variant="body2" color="text.secondary">
                 {imageName
@@ -71,8 +71,8 @@ export const AppDrawerPanel = ({
                 ))}
               </List>
             </>
-          )}
-        </Grid>
+          )} */}
+        </Box>
       </GridStyled>
 
       <GridStyled

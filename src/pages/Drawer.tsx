@@ -3,6 +3,7 @@ import { createContext, useContext, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { AppDrawerPanel } from '../components/AppDrawerPanel'
 import { AppDrawerStage } from '../components/AppDrawerStage'
+import { useSnackbar } from '../contexts/SnackBarContext'
 import type { ImageWithRects } from '../types/Shapes'
 
 const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
@@ -10,6 +11,7 @@ const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
 }))
 
 type DrawerContextType = {
+  selectedImage: ImageWithRects | null
   classItemSelected: number
   classItems: string[]
   handleSetClassItem: (valuer: number) => void
@@ -27,6 +29,8 @@ export const DrawerPage = () => {
   const [classItems, setClassItems] = useState<string[]>([])
 
   const appDrawerExportRef = useRef<(() => void) | null>(null)
+
+  const { showMessage } = useSnackbar()
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -80,7 +84,7 @@ export const DrawerPage = () => {
     if (appDrawerExportRef.current) {
       appDrawerExportRef.current() // Chama a função de exportação do AppDrawer
     } else {
-      alert('Nenhuma imagem para exportar ou o AppDrawer não está pronto.')
+      showMessage('Nenhuma imagem para exportar ou o AppDrawer não está pronto.')
     }
   }
 
@@ -98,30 +102,18 @@ export const DrawerPage = () => {
 
   return (
     <Box>
-      <Grid container columns={12} spacing={2}>
-        <Grid size={{ sm: 12, md: 3 }}></Grid>
-        <Grid container marginTop={'-40px'} flexGrow={1} flexDirection={'row'}>
-          {/* <Button variant="contained" disabled={!selectedImage} onClick={onExportClick}>
-            Export
-          </Button> */}
-        </Grid>
-      </Grid>
       <DrawerContext
         value={{
-          classItemSelected,
           classItems,
+          classItemSelected,
+          selectedImage,
           handleAddClassItem,
           handleSetClassItem,
           handleDeleteClassItem,
         }}
       >
         <GridStyled container spacing={0.5} columns={12}>
-          <AppDrawerPanel
-            rects={selectedImage ? selectedImage.rects : []}
-            imageName={selectedImage?.image.src.split('/').pop()}
-            onHandleExporting={onExportClick}
-            onHandleUploading={handleImageUpload}
-          />
+          <AppDrawerPanel onHandleExporting={onExportClick} onHandleUploading={handleImageUpload} />
           <AppDrawerStage
             selectedImage={selectedImage}
             onUpdateImageRects={handleUpdateImageRects}
