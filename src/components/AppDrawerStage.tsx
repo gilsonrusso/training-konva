@@ -5,7 +5,6 @@ import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined'
 import Crop54Icon from '@mui/icons-material/Crop54'
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined'
 import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material'
-import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import type Konva from 'konva'
 import React, { useCallback, useEffect, useRef, useState, type ElementType } from 'react'
@@ -64,9 +63,9 @@ const downloadURI = ({ uri, name }: downloadURIProps) => {
  * Why is this added?
  * Allows the user to export files that are generated as Blobs (e.g., ZIP files for YOLO annotations).
  */
-const downloadBlob = ({ blob, name }: { blob: Blob; name: string }) => {
-  saveAs(blob, name)
-}
+// const downloadBlob = ({ blob, name }: { blob: Blob; name: string }) => {
+//   saveAs(blob, name)
+// }
 
 /**
  * @constant {PaintOptions[]} PAINT_OPTIONS
@@ -134,7 +133,7 @@ type AppDrawerStageProps = {
   selectedImage: ImageWithRects | null // The currently selected image for editing
   onSetSelectedImage: (image: ImageWithRects) => void // Callback to change the selected image
   onUpdateImageRects: (updatedImage: ImageWithRects) => void // Callback to update the rectangles for an image
-  onSetExportFunction: (exportFn: (exportType: 'image' | 'yolo') => void) => void // Callback to pass the export function to the parent
+  onSetExportFunction: (exportFn: (exportType: 'image' | 'yolo') => Promise<Blob | void>) => void // Callback to pass the export function to the parent
 }
 
 export const AppDrawerStage = ({
@@ -241,13 +240,13 @@ export const AppDrawerStage = ({
   /**
    * @function exportAnnotations
    * @description Handles the export of canvas content (PNG) or YOLO annotations (ZIP).
-   * @param {('image' | 'yolo')} exportType - The desired export type.
+   * @returns {Promise<Blob | void>} Returns the Blob if exportType is 'yolo', otherwise void.
    * Why is this added?
    * Consolidates the export logic, allowing the component to handle different export formats
    * based on user selection in AppDrawerPanel.
    */
   const exportAnnotations = useCallback(
-    async (exportType: 'image' | 'yolo') => {
+    async (exportType: 'image' | 'yolo'): Promise<Blob | void> => {
       if (!selectedImage || !stageRef.current) {
         showMessage('No image selected or drawing stage not found to export.')
         return
@@ -301,11 +300,12 @@ export const AppDrawerStage = ({
           showMessage('No annotated rectangles found for export in YOLO format')
           return
         }
-
-        const zipFileName = 'yolo_annotations.zip'
         const blob = await zip.generateAsync({ type: 'blob' })
-        downloadBlob({ blob, name: zipFileName })
+
+        // const zipFileName = 'yolo_annotations.zip'
+        // downloadBlob({ blob, name: zipFileName })
         showMessage('YOLO notes successfully exported as ZIP!')
+        return blob
       }
     },
     [selectedImage, images, classItems, showMessage]
@@ -586,6 +586,10 @@ export const AppDrawerStage = ({
       setStageY(0)
     }
   }, [selectedImage, dimensions.width, dimensions.height]) // This effect re-runs when the selected image changes or when stage dimensions change.
+
+  useEffect(() => {
+    onSetExportFunction(exportAnnotations)
+  }, [onSetExportFunction, exportAnnotations])
 
   // --- Component Rendering ---
 

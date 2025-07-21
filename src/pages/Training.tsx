@@ -1,10 +1,12 @@
 import { Box, Grid, styled, type GridProps } from '@mui/material'
+import saveAs from 'file-saver'
 import { createContext, useCallback, useContext, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { AppDrawerPanel } from '../components/AppDrawerPanel'
 import { AppDrawerStage } from '../components/AppDrawerStage'
 import { RANDOM_RGBA_COLORS, RANDOM_SOLID_COLORS } from '../constants/rgbaOptions'
 import { useSnackbar } from '../contexts/SnackBarContext'
+import { yoloUploadService } from '../services/yoloUploadService'
 import type { ClassDefinition, ImageWithRects } from '../types/Shapes'
 
 const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
@@ -39,7 +41,9 @@ const TrainingPage = () => {
   const [classItemSelected, setClassItemSelected] = useState<number>(-1)
   const [classItems, setClassItems] = useState<ClassDefinition[]>([])
 
-  const appDrawerExportRef = useRef<((exportType: 'image' | 'yolo') => void) | null>(null)
+  const appDrawerExportRef = useRef<
+    ((exportType: 'image' | 'yolo') => Promise<Blob | void>) | null
+  >(null)
 
   const { showMessage } = useSnackbar()
 
@@ -166,16 +170,77 @@ const TrainingPage = () => {
   }
 
   const handleSetClassItem = (classIdToSelect: number) => {
-    // Alterna a seleção: se clicar na mesma, desseleciona
+    // Toggles selection: clicking on it deselects it
     setClassItemSelected((prev) => (prev === classIdToSelect ? -1 : classIdToSelect))
   }
 
-  // onExportClick agora recebe o tipo de exportação
   const onExportClick = (exportType: 'image' | 'yolo') => {
     if (appDrawerExportRef.current) {
-      appDrawerExportRef.current(exportType) // Passa o tipo para a função de exportação do AppDrawerStage
+      // Here, we just fire off the export and wait for it to handle the download (for PNG)
+      // or just generate the blob (for YOLO, if the download is done elsewhere)
+      appDrawerExportRef.current(exportType).then((blob) => {
+        // If it's YOLO and generated a blob, and you WANT TO DOWNLOAD IT HERE TOO:
+        if (blob instanceof Blob && exportType === 'yolo') {
+          const zipFileName = 'yolo_annotations.zip'
+          saveAs(blob, zipFileName) // Necessário importar saveAs para isso
+          showMessage('YOLO notes downloaded successfully!')
+        }
+      })
     } else {
-      showMessage('O sistema de exportação não está pronto.')
+      showMessage('The export system is not ready.')
+    }
+  }
+
+  const handleStartTraining = async () => {
+    if (!images || images.length === 0) {
+      showMessage('Please upload images to start training.')
+      return
+    }
+    if (classItems.length === 0) {
+      showMessage('Please add annotation classes before starting training.')
+      return
+    }
+    if (!appDrawerExportRef.current) {
+      showMessage('The export system is not ready for training.')
+      return
+    }
+
+    showMessage('Starting training process...')
+
+    try {
+      // 1. Generate YOLO annotations (ZIP Blob)
+      const yoloZipBlob = await appDrawerExportRef.current('yolo')
+
+      if (!yoloZipBlob) {
+        showMessage('No YOLO annotations generated for training.')
+        return
+      }
+
+      // 2. Create a File object from the Blob
+      const yoloZipFile = new File([yoloZipBlob], 'yolo_annotations.zip', {
+        type: 'application/zip',
+      })
+
+      // 3. Upload the ZIP file to the upload service
+      // Note: the service expects an array of Files.
+      const uploadResponse = await yoloUploadService.uploadYOLOAnnotations({ files: [yoloZipFile] })
+
+      showMessage(`Training started! Upload completed: ${uploadResponse.message}`)
+      console.log('Upload response for training:', uploadResponse)
+
+      // Here you can add additional logic, such as:
+      // - Mark the training as "in progress"
+      // - Redirect to a progress page
+      // - Store the upload ID to check the status
+    } catch (error: unknown) {
+      console.error('Error starting training or uploading:', error)
+      if (error instanceof Error) {
+        showMessage(`Error starting training: ${error.message}`)
+      } else if (typeof error === 'string') {
+        showMessage(`Error starting training: ${error}`)
+      } else {
+        showMessage('Error starting training: An unknown error occurred.')
+      }
     }
   }
 
@@ -206,7 +271,11 @@ const TrainingPage = () => {
         }}
       >
         <GridStyled container spacing={0.5} columns={12}>
-          <AppDrawerPanel onHandleExporting={onExportClick} onHandleUploading={handleImageUpload} />
+          <AppDrawerPanel
+            onHandleExporting={onExportClick}
+            onHandleUploading={handleImageUpload}
+            onStartTraining={handleStartTraining}
+          />
           <AppDrawerStage
             selectedImage={selectedImage}
             onUpdateImageRects={handleUpdateImageRects}

@@ -10,9 +10,14 @@ import { GridStyled } from './muiStyled/GridStyled'
 type AppDrawerPanelProps = {
   onHandleExporting: (exportType: 'image' | 'yolo') => void
   onHandleUploading: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onStartTraining: () => void
 }
 
-export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDrawerPanelProps) => {
+export const AppDrawerPanel = ({
+  onHandleExporting,
+  onHandleUploading,
+  onStartTraining,
+}: AppDrawerPanelProps) => {
   const [newClassName, setNewClassName] = useState('')
   // State to control the export menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -150,8 +155,8 @@ export const AppDrawerPanel = ({ onHandleExporting, onHandleUploading }: AppDraw
               <Typography variant="body2">{`Rects: ${numberRectsCreated() || 0}`}</Typography>
             </Grid>
             <Grid sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Button size="small" variant="contained">
-                Training
+              <Button onClick={onStartTraining} size="small" variant="contained">
+                Start Training
               </Button>
             </Grid>
           </Grid>
