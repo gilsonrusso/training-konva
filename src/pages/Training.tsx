@@ -111,7 +111,7 @@ const TrainingPage = () => {
       return img
     })
     setImages(newImagesArr)
-    showMessage('Retângulo removido!')
+    showMessage('Rectangle removed!')
   }
 
   const handleAddClassItem = useCallback(
