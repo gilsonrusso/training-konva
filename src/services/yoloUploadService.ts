@@ -47,14 +47,11 @@ export const yoloUploadService = {
       return response.data
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error(
-          'Erro ao fazer upload dos arquivos YOLO:',
-          error.response?.data || error.message
-        )
-        throw new Error(error.response?.data?.message || 'Falha no upload das anotações YOLO.')
+        console.error('Error uploading YOLO files:', error.response?.data || error.message)
+        throw new Error(error.response?.data?.message || 'YOLO annotations upload failed')
       } else {
-        console.error('Erro desconhecido:', error)
-        throw new Error('Ocorreu um erro desconhecido durante o upload.')
+        console.error('Unknown error:', error)
+        throw new Error('An unknown error occurred during upload.')
       }
     }
   },

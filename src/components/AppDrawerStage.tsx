@@ -607,13 +607,13 @@ export const AppDrawerStage = ({
       >
         {/* Container for the tool buttons */}
         <Grid container spacing={1} columns={12} sx={{ marginY: 2, justifyContent: 'center' }}>
-          {PAINT_OPTIONS.map(({ icon: Icon, id }) => (
+          {PAINT_OPTIONS.map(({ icon: Icon, id, disabled }) => (
             <React.Fragment key={id}>
               <Grid>
                 <IconButton
                   onClick={() => setCurrentTool(id)} // Sets the active tool on click
                   color={currentTool === id ? 'primary' : 'default'} // Changes color if it's the active tool
-                  disabled={!selectedImage} // Disables tool buttons if no image is selected
+                  disabled={!selectedImage || disabled} // Disables tool buttons if no image is selected
                 >
                   <Icon /> {/* Renders the tool icon */}
                 </IconButton>
