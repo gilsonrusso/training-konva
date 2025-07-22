@@ -1,9 +1,10 @@
-import { Box, Typography } from '@mui/material'
+import { Box } from '@mui/material'
+import { HorizontalLinearStepper } from '../components/commons/AppStepper'
 
 const HomePage = () => {
   return (
     <Box>
-      <Typography>Home Page</Typography>
+      <HorizontalLinearStepper />
     </Box>
   )
 }

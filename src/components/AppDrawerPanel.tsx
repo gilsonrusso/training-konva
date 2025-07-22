@@ -155,7 +155,7 @@ export const AppDrawerPanel = ({
               <Typography variant="body2">{`Rects: ${numberRectsCreated() || 0}`}</Typography>
             </Grid>
             <Grid sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Button onClick={onStartTraining} size="small" variant="contained">
+              <Button onClick={onStartTraining} size="small" color="secondary" variant="contained">
                 Start Training
               </Button>
             </Grid>

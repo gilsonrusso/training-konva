@@ -19,7 +19,9 @@ import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
 import HomeIcon from '@mui/icons-material/Home'
 import TableViewIcon from '@mui/icons-material/TableView'
 import { useEffect, useState } from 'react'
-import { Link, Outlet } from 'react-router'
+import { Outlet } from 'react-router'
+import BasicSwitches from './components/layout/DarkMode'
+import { StyledNavLink } from './components/muiStyled/NavLinkStyled'
 import { UserService } from './services/userServices'
 import type { User } from './types/user.types'
 
@@ -40,6 +42,8 @@ function App() {
 
   const [users, setUsers] = useState<User[]>([])
   const controller = new AbortController()
+
+  console.log(`:::`, users)
 
   async function fetchUsers() {
     try {
@@ -88,36 +92,39 @@ function App() {
               flexGrow={8}
               sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 5 }}
             >
-              <Link
+              <StyledNavLink
                 to={{
                   pathname: '/',
                 }}
+                className={({ isActive }) => `${isActive ? 'active' : ''}`}
               >
                 <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
                   <HomeIcon />
                   <Typography paddingTop={1}>Home</Typography>
                 </Box>
-              </Link>
-              <Link
+              </StyledNavLink>
+              <StyledNavLink
                 to={{
                   pathname: '/list',
                 }}
+                className={({ isActive }) => `${isActive ? 'active' : ''}`}
               >
                 <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
                   <TableViewIcon />
                   <Typography paddingTop={1}>list</Typography>
                 </Box>
-              </Link>
-              <Link
+              </StyledNavLink>
+              <StyledNavLink
                 to={{
                   pathname: '/training',
                 }}
+                className={({ isActive }) => `${isActive ? 'active' : ''}`}
               >
                 <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
                   <FitnessCenterIcon />
                   <Typography paddingTop={1}>Training</Typography>
                 </Box>
-              </Link>
+              </StyledNavLink>
             </Grid>
             <Grid
               flexGrow={1}
@@ -126,6 +133,7 @@ function App() {
               <IconButtonStyled>
                 <AccountCircleIcon />
               </IconButtonStyled>
+              <BasicSwitches />
             </Grid>
           </Grid>
         </Toolbar>
