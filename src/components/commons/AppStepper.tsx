@@ -6,6 +6,7 @@ import StepLabel from '@mui/material/StepLabel'
 import Stepper, { type StepperProps } from '@mui/material/Stepper'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
+import { useSnackbar } from '../../contexts/SnackBarContext'
 import type { FetchedCreatedList } from '../../types/requirements'
 import { AppStepOne } from './steppers/stepOne/AppStepOne'
 import { AppStepTwo } from './steppers/stepTwo/AppStepTwo'
@@ -22,6 +23,8 @@ export const AppStepper = () => {
   const [selectedListFromStep1, setSelectedListFromStep1] = useState<FetchedCreatedList | null>(
     null
   )
+
+  const { showSnackbar } = useSnackbar()
 
   const theme = useTheme()
 
@@ -41,7 +44,10 @@ export const AppStepper = () => {
     }
 
     if (activeStep === 0 && !selectedListFromStep1) {
-      alert('Por favor, selecione uma lista para prosseguir para o próximo passo.')
+      showSnackbar(
+        'Por favor, selecione uma lista para prosseguir para o próximo passo.',
+        'success'
+      )
       return
     }
 

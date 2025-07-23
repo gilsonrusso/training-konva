@@ -1,5 +1,5 @@
 import { AxiosError, type AxiosInstance } from 'axios'
-import { AuthService } from '../services/authService' // Certifique-se de que o caminho está correto
+import { AuthService } from '../services/authService'
 
 export function setInterceptors(api: AxiosInstance) {
   api.interceptors.request.use(
@@ -12,15 +12,10 @@ export function setInterceptors(api: AxiosInstance) {
         config.headers.Authorization = `Bearer ${token}`
       }
 
-      // Dispara um evento customizado para mostrar o loading
-      // Este evento pode ser "escutado" pelo seu componente Loading
-      window.dispatchEvent(new CustomEvent('loading:show'))
-
       return config
     },
     function (error) {
-      // Dispara um evento customizado para esconder o loading em caso de erro na requisição (antes de ser enviada)
-      window.dispatchEvent(new CustomEvent('loading:hide'))
+      // Faz alguma coisa com o erro da requisição
       return Promise.reject(error)
     }
   )
@@ -28,14 +23,10 @@ export function setInterceptors(api: AxiosInstance) {
   api.interceptors.response.use(
     function (response) {
       console.log('[Response]', response.status, response.config.url)
-      // Dispara um evento customizado para esconder o loading em caso de sucesso na resposta
-      window.dispatchEvent(new CustomEvent('loading:hide'))
       return response
     },
     (error: AxiosError) => {
       console.error('[Axios Error]', error.message)
-      // Dispara um evento customizado para esconder o loading em caso de erro na resposta
-      window.dispatchEvent(new CustomEvent('loading:hide'))
 
       if (error.response?.status === 401) {
         console.warn('Não autorizado — redirecionando ou limpando sessão')

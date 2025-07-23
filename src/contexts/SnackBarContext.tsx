@@ -1,36 +1,86 @@
-import Snackbar, { type SnackbarCloseReason } from '@mui/material/Snackbar'
-import { createContext, type ReactNode, useCallback, useContext, useState } from 'react'
+import { Alert, useTheme } from '@mui/material'
+import Snackbar from '@mui/material/Snackbar'
+import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react'
 
-type SnackbarContextType = {
-  showMessage: (message: string) => void
+// Definição dos tipos de severidade para o Alert
+export type SnackbarSeverity = 'error' | 'warning' | 'info' | 'success'
+interface SnackbarContextType {
+  showSnackbar: (message: string, severity?: SnackbarSeverity, backgroundColor?: string) => void
 }
 
+// 2. Criação do Context
 const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined)
 
+// 3. Interface para o estado do Snackbar
+interface SnackbarState {
+  open: boolean
+  message: string
+  severity: SnackbarSeverity
+  backgroundColor?: string
+}
+
 export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
-  const [open, setOpen] = useState(false)
-  const [message, setMessage] = useState('')
+  const [snackbarState, setSnackbarState] = useState<SnackbarState>({
+    open: false,
+    message: '',
+    severity: 'info', // Padrão
+    backgroundColor: undefined,
+  })
 
-  const showMessage = useCallback((msg: string) => {
-    setMessage(msg)
-    setOpen(true)
-  }, [])
+  const theme = useTheme()
 
-  const handleClose = (_: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
-    if (reason === 'clickaway') return
-    setOpen(false)
+  const showSnackbar = useCallback(
+    (
+      message: string,
+      severity: SnackbarSeverity = 'info', // Padrão 'info'
+      backgroundColor?: string
+    ) => {
+      setSnackbarState({
+        open: true,
+        message,
+        severity,
+        backgroundColor,
+      })
+    },
+    []
+  )
+
+  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return
+    }
+    setSnackbarState((prev) => ({ ...prev, open: false }))
   }
 
+  const alertSx = useMemo(
+    () => ({
+      width: '100%',
+      backgroundColor: snackbarState.backgroundColor, // Aplica a cor de fundo customizada
+      // Você pode querer ajustar a cor do texto para contraste se a cor de fundo for escura
+      // color: snackbarState.backgroundColor ? 'white' : undefined,
+    }),
+    [snackbarState.backgroundColor]
+  )
+
   return (
-    <SnackbarContext.Provider value={{ showMessage }}>
+    <SnackbarContext.Provider value={{ showSnackbar }}>
       {children}
       <Snackbar
-        open={open}
-        autoHideDuration={5000}
+        open={snackbarState.open}
+        autoHideDuration={6000} // Duração em milissegundos
         onClose={handleClose}
-        message={message}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      />
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }} // Posição
+        sx={{ zIndex: (theme) => theme.zIndex?.snackbar || 1400 }}
+      >
+        <Alert
+          onClose={handleClose}
+          severity={snackbarState.severity}
+          variant="filled"
+          sx={alertSx}
+        >
+          {snackbarState.message}
+        </Alert>
+      </Snackbar>
     </SnackbarContext.Provider>
   )
 }
@@ -38,7 +88,7 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
 export const useSnackbar = () => {
   const context = useContext(SnackbarContext)
   if (!context) {
-    throw new Error('useSnackbar deve ser usado dentro do SnackbarProvider')
+    throw new Error('useSnackbar must be used within a SnackbarProvider')
   }
   return context
 }

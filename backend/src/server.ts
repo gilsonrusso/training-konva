@@ -48,11 +48,14 @@ app.post('/api/upload-yolo', upload.array('yoloFiles'), (req: Request, res: Resp
   const uploadedFileNames = files.map((file) => file.filename)
   console.log(`[${new Date().toLocaleTimeString()}] Arquivos YOLO recebidos:`, uploadedFileNames)
 
-  res.status(200).json({
-    message: 'Arquivos YOLO recebidos com sucesso!',
-    uploadedFiles: uploadedFileNames,
-    count: uploadedFileNames.length,
-  })
+  setTimeout(() => {
+    console.log('Delayed message after 2 seconds')
+    res.status(200).json({
+      message: 'Arquivos YOLO recebidos com sucesso!',
+      uploadedFiles: uploadedFileNames,
+      count: uploadedFileNames.length,
+    })
+  }, 200000) // 2000 milliseconds = 2 seconds
 })
 
 app.get('/api/test', (req: Request, res: Response) => {

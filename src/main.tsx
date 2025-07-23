@@ -4,48 +4,10 @@ import './index.css'
 
 import { ThemeProvider } from '@mui/material'
 import { RouterProvider } from 'react-router'
+import Loading from './components/layout/Loading.tsx'
 import { SnackbarProvider } from './contexts/SnackBarContext.tsx'
 import { theme } from './layout/theme.ts'
 import { router } from './router.tsx'
-
-// const theme = createTheme({
-//   colorSchemes: {
-//     dark: true,
-//   },
-//   palette: {
-//     mode: 'light',
-//     // primary: {
-//     //   main: red[500],
-//     // },
-//     // secondary: {
-//     //   main: blue[500],
-//     // },
-//     // background: {
-//     //   default: '#232323',
-//     //   paper: '#232323',
-//     // },
-//   },
-//   components: {
-//     MuiDrawer: {
-//       styleOverrides: {
-//         paper: {
-//           width: 240,
-//           borderRight: 'none',
-//         },
-//         root: {
-//           width: 240,
-//         },
-//       },
-//     },
-//     MuiAppBar: {
-//       styleOverrides: {
-//         root: {
-//           boxShadow: 'none',
-//         },
-//       },
-//     },
-//   },
-// })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -53,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
       <SnackbarProvider>
         <RouterProvider router={router} />
       </SnackbarProvider>
+      <Loading />
     </ThemeProvider>
   </StrictMode>
 )
