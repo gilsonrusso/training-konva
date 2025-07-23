@@ -26,11 +26,11 @@ export const AppCheckboxList = () => {
       subheader={
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <ListSubheader>Classes List</ListSubheader>
-          <Badge badgeContent={`${classItems.length || 0}`} color="primary"></Badge>
+          <Badge badgeContent={`${classItems?.length || 0}`} color="primary"></Badge>
         </Box>
       }
     >
-      {classItems.length === 0 && (
+      {classItems?.length === 0 && (
         <>
           <Typography sx={{ paddingLeft: '16px' }} variant="body2" color="text.secondary">
             No classes created.
@@ -38,7 +38,7 @@ export const AppCheckboxList = () => {
         </>
       )}
 
-      {classItems.map(({ id, name }, index) => {
+      {classItems?.map(({ id, name }, index) => {
         const labelId = `checkbox-list-label-${id}`
 
         return (

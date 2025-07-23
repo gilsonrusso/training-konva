@@ -1,10 +1,10 @@
 import { Box } from '@mui/material'
-import { HorizontalLinearStepper } from '../components/commons/AppStepper'
+import { AppStepper } from '../components/commons/AppStepper'
 
 const HomePage = () => {
   return (
     <Box>
-      <HorizontalLinearStepper />
+      <AppStepper />
     </Box>
   )
 }

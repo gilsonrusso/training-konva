@@ -5,18 +5,23 @@ import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
 import Stepper, { type StepperProps } from '@mui/material/Stepper'
 import Typography from '@mui/material/Typography'
-import * as React from 'react'
-import { AppCheckboxList2 } from './AppCheckboxList2'
+import { useState } from 'react'
+import type { FetchedCreatedList } from '../../types/requirements'
+import { AppStepOne } from './steppers/stepOne/AppStepOne'
+import { AppStepTwo } from './steppers/stepTwo/AppStepTwo'
 
-const steps = ['Select campaign settings', 'Create an ad group', 'Create an ad']
+const steps = ['Select or Create a list', 'Upload Images', 'Report']
 
-export const StepperStyled = styled(Stepper)<StepperProps>(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
+export const StepperStyled = styled(Stepper)<StepperProps>(() => ({
+  // backgroundColor: theme.palette.background.paper,
 }))
 
-export const HorizontalLinearStepper = () => {
-  const [activeStep, setActiveStep] = React.useState(0)
-  const [skipped, setSkipped] = React.useState(new Set<number>())
+export const AppStepper = () => {
+  const [activeStep, setActiveStep] = useState(0)
+  const [skipped, setSkipped] = useState(new Set<number>())
+  const [selectedListFromStep1, setSelectedListFromStep1] = useState<FetchedCreatedList | null>(
+    null
+  )
 
   const theme = useTheme()
 
@@ -35,6 +40,11 @@ export const HorizontalLinearStepper = () => {
       newSkipped.delete(activeStep)
     }
 
+    if (activeStep === 0 && !selectedListFromStep1) {
+      alert('Por favor, selecione uma lista para prosseguir para o próximo passo.')
+      return
+    }
+
     setActiveStep((prevActiveStep) => prevActiveStep + 1)
     setSkipped(newSkipped)
   }
@@ -45,8 +55,6 @@ export const HorizontalLinearStepper = () => {
 
   const handleSkip = () => {
     if (!isStepOptional(activeStep)) {
-      // You probably want to guard against something like this,
-      // it should never occur unless someone's actively trying to break something.
       throw new Error("You can't skip a step that isn't optional.")
     }
 
@@ -60,6 +68,12 @@ export const HorizontalLinearStepper = () => {
 
   const handleReset = () => {
     setActiveStep(0)
+    setSelectedListFromStep1(null)
+  }
+
+  const handleListSelected = (list: FetchedCreatedList | null) => {
+    if (!list) return
+    setSelectedListFromStep1(list)
   }
 
   return (
@@ -68,7 +82,7 @@ export const HorizontalLinearStepper = () => {
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - ${75}px)`,
+        height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - 75px)`,
         overflowY: 'hidden',
       }}
     >
@@ -101,9 +115,17 @@ export const HorizontalLinearStepper = () => {
         </>
       ) : (
         <>
-          {/* <Typography sx={{ mt: 2, mb: 1 }}>Step {activeStep + 1}</Typography> */}
-          <AppCheckboxList2 />
-          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2, height: '100%' }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {activeStep === 0 && (
+              <AppStepOne
+                onListSelected={handleListSelected}
+                selectedListIdForStepper={selectedListFromStep1?.id || null}
+              />
+            )}
+            {activeStep === 1 && <AppStepTwo selectedList={selectedListFromStep1} />}
+            {activeStep === 2 && <Typography>Conteúdo do Passo 3</Typography>}
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
             <Button color="inherit" disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
               Back
             </Button>
