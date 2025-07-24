@@ -199,7 +199,7 @@ export const AppDrawerStage = ({
 
   const theme = useTheme()
   const { classItems, classItemSelected } = useDrawerContext()
-  const { showMessage } = useSnackbar()
+  const { showSnackbar } = useSnackbar()
 
   /**
    * @ref {Konva.Stage | null} stageRef
@@ -248,7 +248,7 @@ export const AppDrawerStage = ({
   const exportAnnotations = useCallback(
     async (exportType: 'image' | 'yolo'): Promise<Blob | void> => {
       if (!selectedImage || !stageRef.current) {
-        showMessage('No image selected or drawing stage not found to export.')
+        showSnackbar('No image selected or drawing stage not found to export.')
         return
       }
 
@@ -258,7 +258,7 @@ export const AppDrawerStage = ({
           uri: dataUri,
           name: `annotated_${selectedImage?.image.src.split('/').pop()?.split('.')[0] || 'image'}.png`,
         })
-        showMessage('Image successfully exported as PNG!')
+        showSnackbar('Image successfully exported as PNG!')
       } else if (exportType === 'yolo') {
         const zip = new JSZip()
         let annotationsExist = false
@@ -297,18 +297,18 @@ export const AppDrawerStage = ({
         })
 
         if (!annotationsExist) {
-          showMessage('No annotated rectangles found for export in YOLO format')
+          showSnackbar('No annotated rectangles found for export in YOLO format')
           return
         }
         const blob = await zip.generateAsync({ type: 'blob' })
 
         // const zipFileName = 'yolo_annotations.zip'
         // downloadBlob({ blob, name: zipFileName })
-        showMessage('YOLO notes successfully exported as ZIP!')
+        showSnackbar('YOLO notes successfully exported as ZIP!')
         return blob
       }
     },
-    [selectedImage, images, classItems, showMessage]
+    [selectedImage, images, classItems, showSnackbar]
   )
 
   /**
@@ -330,7 +330,7 @@ export const AppDrawerStage = ({
 
     // Prevents drawing if no label is provided.
     if (classItemSelected === -1) {
-      showMessage('Please enter a class for the rectangle before drawing.')
+      showSnackbar('Please enter a class for the rectangle before drawing.')
       return
     }
 
@@ -353,7 +353,7 @@ export const AppDrawerStage = ({
     // Gets the colors of the selected class from the context
     const selectedClass = classItems.find((c) => c.id === classItemSelected)
     if (!selectedClass) {
-      showMessage('Selected class not found. Please select a valid class.')
+      showSnackbar('Selected class not found. Please select a valid class.')
       setIsDrawing(false) // Prevents drawing if the class is invalid
       return
     }
@@ -463,7 +463,7 @@ export const AppDrawerStage = ({
       // automatically improves the user experience, making the workflow more efficient.
       setCurrentTool(DrawTools.Select)
     } else {
-      showMessage('Rectangle too small. Draw a larger rectangle.')
+      showSnackbar('Rectangle too small. Draw a larger rectangle.')
     }
 
     setNewRect(null) // Clears the `newRect` state, removing it from rendering.

@@ -7,6 +7,7 @@ import Stepper, { type StepperProps } from '@mui/material/Stepper'
 import Typography from '@mui/material/Typography'
 import { useCallback, useRef, useState } from 'react'
 import { useSnackbar } from '../../contexts/SnackBarContext'
+import { useUnsavedChanges } from '../../contexts/UnsavedChangesContext'
 import type { FetchedCreatedList } from '../../types/requirements'
 import { AppStepOne } from './steppers/stepOne/AppStepOne'
 import { AppStepTwo, type AppStepTwoHandles } from './steppers/stepTwo/AppStepTwo'
@@ -26,6 +27,7 @@ export const AppStepper = () => {
   const appStepTwoRef = useRef<AppStepTwoHandles>(null)
 
   const { showSnackbar } = useSnackbar()
+  const { markAsClean } = useUnsavedChanges()
 
   const theme = useTheme()
 
@@ -40,6 +42,7 @@ export const AppStepper = () => {
           const analysisResult = await appStepTwoRef.current.analyzeImages()
           console.log('Resultado da análise:', analysisResult)
           showSnackbar('Análise concluída com sucesso!', 'success')
+          markAsClean()
           setActiveStep((prevActiveStep) => prevActiveStep + 1)
         } catch (error) {
           showSnackbar(
@@ -62,6 +65,7 @@ export const AppStepper = () => {
     setActiveStep(0)
     setSelectedListFromStep1(null)
     setStepTwoHasImages(false)
+    markAsClean()
   }
 
   const handleListSelected = (list: FetchedCreatedList | null) => {

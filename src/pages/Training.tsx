@@ -45,13 +45,13 @@ const TrainingPage = () => {
     ((exportType: 'image' | 'yolo') => Promise<Blob | void>) | null
   >(null)
 
-  const { showMessage } = useSnackbar()
+  const { showSnackbar } = useSnackbar()
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
 
     if (files.length === 0) {
-      showMessage('No image selected to upload.')
+      showSnackbar('No image selected to upload.')
       return
     }
 
@@ -78,12 +78,12 @@ const TrainingPage = () => {
           if (newImagesArray.length > 0) {
             setSelectedImage(newImagesArray[0])
           }
-          showMessage(`${loadedCount} imagem(ns) carregada(s) com sucesso!`)
+          showSnackbar(`${loadedCount} imagem(ns) carregada(s) com sucesso!`)
         }
       }
       img.onerror = (err) => {
         console.error('Erro ao carregar a imagem:', err)
-        showMessage('Não foi possível carregar uma ou mais imagens.')
+        showSnackbar('Não foi possível carregar uma ou mais imagens.')
         loadedCount++
         if (loadedCount === files.length) {
           setImages(newImagesArray)
@@ -111,7 +111,7 @@ const TrainingPage = () => {
       return img
     })
     setImages(newImagesArr)
-    showMessage('Rectangle removed!')
+    showSnackbar('Rectangle removed!')
   }
 
   const handleAddClassItem = useCallback(
@@ -120,7 +120,7 @@ const TrainingPage = () => {
 
       const foundIndex = classItems.find((item) => item.name === valueSanitized)
       if (foundIndex) {
-        showMessage(`Class name: ${name} already exists.`)
+        showSnackbar(`Class name: ${name} already exists.`)
       }
 
       const newClassId = classItems.length > 0 ? Math.max(...classItems.map((c) => c.id)) + 1 : 0
@@ -141,9 +141,9 @@ const TrainingPage = () => {
 
       setClassItems((prev) => [...prev, newClass])
       setClassItemSelected(newClassId)
-      showMessage(`Classe "${name}" add with success!`)
+      showSnackbar(`Classe "${name}" add with success!`)
     },
-    [classItems, showMessage]
+    [classItems, showSnackbar]
   )
 
   const handleDeleteClassItem = (classIdToDelete: number) => {
@@ -166,7 +166,7 @@ const TrainingPage = () => {
         return updatedImage
       })
     )
-    showMessage('All tags using this class have all been removed.')
+    showSnackbar('All tags using this class have all been removed.')
   }
 
   const handleSetClassItem = (classIdToSelect: number) => {
@@ -183,36 +183,36 @@ const TrainingPage = () => {
         if (blob instanceof Blob && exportType === 'yolo') {
           const zipFileName = 'yolo_annotations.zip'
           saveAs(blob, zipFileName) // Necessário importar saveAs para isso
-          showMessage('YOLO notes downloaded successfully!')
+          showSnackbar('YOLO notes downloaded successfully!')
         }
       })
     } else {
-      showMessage('The export system is not ready.')
+      showSnackbar('The export system is not ready.')
     }
   }
 
   const handleStartTraining = async () => {
     if (!images || images.length === 0) {
-      showMessage('Please upload images to start training.')
+      showSnackbar('Please upload images to start training.')
       return
     }
     if (classItems.length === 0) {
-      showMessage('Please add annotation classes before starting training.')
+      showSnackbar('Please add annotation classes before starting training.')
       return
     }
     if (!appDrawerExportRef.current) {
-      showMessage('The export system is not ready for training.')
+      showSnackbar('The export system is not ready for training.')
       return
     }
 
-    showMessage('Starting training process...')
+    showSnackbar('Starting training process...')
 
     try {
       // 1. Generate YOLO annotations (ZIP Blob)
       const yoloZipBlob = await appDrawerExportRef.current('yolo')
 
       if (!yoloZipBlob) {
-        showMessage('No YOLO annotations generated for training.')
+        showSnackbar('No YOLO annotations generated for training.')
         return
       }
 
@@ -225,7 +225,7 @@ const TrainingPage = () => {
       // Note: the service expects an array of Files.
       const uploadResponse = await yoloUploadService.uploadYOLOAnnotations({ files: [yoloZipFile] })
 
-      showMessage(`Training started! Upload completed: ${uploadResponse.message}`)
+      showSnackbar(`Training started! Upload completed: ${uploadResponse.message}`)
       console.log('Upload response for training:', uploadResponse)
 
       // Here you can add additional logic, such as:
@@ -235,11 +235,11 @@ const TrainingPage = () => {
     } catch (error: unknown) {
       console.error('Error starting training or uploading:', error)
       if (error instanceof Error) {
-        showMessage(`Error starting training: ${error.message}`)
+        showSnackbar(`Error starting training: ${error.message}`)
       } else if (typeof error === 'string') {
-        showMessage(`Error starting training: ${error}`)
+        showSnackbar(`Error starting training: ${error}`)
       } else {
-        showMessage('Error starting training: An unknown error occurred.')
+        showSnackbar('Error starting training: An unknown error occurred.')
       }
     }
   }

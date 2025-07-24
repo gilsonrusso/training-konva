@@ -17,6 +17,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import type { FetchedCreatedList } from '../../../../types/requirements'
 
 import JSZip from 'jszip'
+import { useUnsavedChanges } from '../../../../contexts/UnsavedChangesContext'
 import { AppDragAndDrop } from '../../DragAndDrop' // Verifique se o caminho está correto
 
 interface AnalysisResult {
@@ -39,6 +40,8 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
+
+  const { markAsDirty, markAsClean } = useUnsavedChanges()
 
   useImperativeHandle(ref, () => ({
     analyzeImages: handleAnalyzeAndSend,
@@ -154,8 +157,15 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
   }
 
   useEffect(() => {
-    onHasImagesChange(imageFiles.length > 0)
-  }, [imageFiles, onHasImagesChange])
+    const hasImagesLoaded = imageFiles.length > 0
+    onHasImagesChange(hasImagesLoaded)
+    // Marca como modificado se houver imagens carregadas e não estiverem limpas
+    if (hasImagesLoaded) {
+      markAsDirty()
+    } else {
+      markAsClean() // Se não há imagens, não há mudanças não salvas relacionadas a imagens
+    }
+  }, [imageFiles, markAsClean, markAsDirty, onHasImagesChange])
 
   useEffect(() => {
     return () => {
