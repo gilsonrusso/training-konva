@@ -4,12 +4,12 @@ import Button from '@mui/material/Button'
 import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
 import Stepper, { type StepperProps } from '@mui/material/Stepper'
-import Typography from '@mui/material/Typography'
 import { useCallback, useRef, useState } from 'react'
 import { useSnackbar } from '../../contexts/SnackBarContext'
 import { useUnsavedChanges } from '../../contexts/UnsavedChangesContext'
 import type { FetchedCreatedList } from '../../types/requirements'
 import { AppStepOne } from './steppers/stepOne/AppStepOne'
+import { AppReportStep } from './steppers/stepThree/AppStepThree'
 import { AppStepTwo, type AppStepTwoHandles } from './steppers/stepTwo/AppStepTwo'
 
 const steps = ['Select or Create a list', 'Upload Images', 'Report']
@@ -25,6 +25,8 @@ export const AppStepper = () => {
   )
   const [stepTwoHasImages, setStepTwoHasImages] = useState(false)
   const appStepTwoRef = useRef<AppStepTwoHandles>(null)
+
+  const [analysisReportData, setAnalysisReportData] = useState<any>(null)
 
   const { showSnackbar } = useSnackbar()
   const { markAsClean } = useUnsavedChanges()
@@ -42,6 +44,10 @@ export const AppStepper = () => {
           const analysisResult = await appStepTwoRef.current.analyzeImages()
           console.log('Resultado da análise:', analysisResult)
           showSnackbar('Análise concluída com sucesso!', 'success')
+
+          // TODO MOCK RESULT
+          setAnalysisReportData(analysisResult.data)
+
           markAsClean()
           setActiveStep((prevActiveStep) => prevActiveStep + 1)
         } catch (error) {
@@ -116,7 +122,9 @@ export const AppStepper = () => {
               onHasImagesChange={handleStepTwoHasImagesChange}
             />
           )}
-          {activeStep === 2 && <Typography>Conteúdo do Passo 3: Resultados da Análise</Typography>}
+          {activeStep === 2 && ( // Renderiza o AppReportStep no Passo 3
+            <AppReportStep reportData={analysisReportData} />
+          )}
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
           <Button

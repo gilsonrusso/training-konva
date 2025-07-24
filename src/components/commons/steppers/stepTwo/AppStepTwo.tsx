@@ -23,7 +23,7 @@ import { AppDragAndDrop } from '../../DragAndDrop' // Verifique se o caminho est
 interface AnalysisResult {
   success: boolean
   message: string
-  // data: {}
+  data: any
 }
 export interface AppStepTwoHandles {
   analyzeImages: () => Promise<AnalysisResult> // Função para analisar e enviar
@@ -105,10 +105,22 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
       // Simulação de sucesso
       await new Promise((resolve) => setTimeout(resolve, 2000))
       console.log('Análise concluída com sucesso (simulado)!')
+
+      const mockReportData = imageFiles.map((file, index) => ({
+        id: `img-${file.name}-${index}`, // ID único para cada imagem
+        imageSrc: URL.createObjectURL(file), // Cria uma URL temporária para a imagem
+        title: `Relatório da Imagem: ${file.name}`,
+        summary: `Esta imagem foi analisada com sucesso. Detecção de objetos: ${Math.floor(Math.random() * 5) + 1} objetos encontrados. Qualidade: ${Math.random() > 0.5 ? 'Boa' : 'Regular'}.`,
+      }))
+
       return {
         success: true,
         message: 'Análise simulada concluída.',
-        // data: {}
+        data: {
+          overallSummary:
+            'Resumo geral da análise de todas as imagens carregadas e processadas, indicando os resultados principais e quaisquer anomalias.',
+          imageReports: mockReportData,
+        },
       }
     } catch (error) {
       console.error('Erro ao analisar e enviar imagens:', error)
