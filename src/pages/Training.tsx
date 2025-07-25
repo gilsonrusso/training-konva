@@ -1,9 +1,9 @@
 import { Box, Grid, styled, type GridProps } from '@mui/material'
 import saveAs from 'file-saver'
-import { createContext, useCallback, useContext, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { AppDrawerPanel } from '../components/AppDrawerPanel'
-import { AppDrawerStage } from '../components/AppDrawerStage'
+import { AppDrawerPanel } from '../components/requirements/AppDrawerPanel'
+import { AppDrawerStage } from '../components/requirements/AppDrawerStage'
 import { RANDOM_RGBA_COLORS, RANDOM_SOLID_COLORS } from '../constants/rgbaOptions'
 import { useSnackbar } from '../contexts/SnackBarContext'
 import { yoloUploadService } from '../services/yoloUploadService'
@@ -47,72 +47,78 @@ const TrainingPage = () => {
 
   const { showSnackbar } = useSnackbar()
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
+  const handleImageUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || [])
 
-    if (files.length === 0) {
-      showSnackbar('No image selected to upload.')
-      return
-    }
-
-    // Clear selection and rectangles when loading new images
-    setSelectedImage(null)
-    setImages([])
-
-    let loadedCount = 0
-    const newImagesArray: ImageWithRects[] = []
-
-    files.forEach((file) => {
-      const id = uuidv4()
-      const img = new window.Image()
-      img.src = URL.createObjectURL(file)
-      img.onload = () => {
-        const newImage: ImageWithRects = { id, image: img, rects: [] }
-        newImagesArray.push(newImage)
-        loadedCount++
-
-        // When all images are loaded, update the states
-        if (loadedCount === files.length) {
-          setImages(newImagesArray)
-          // Sets the first image as selected by default
-          if (newImagesArray.length > 0) {
-            setSelectedImage(newImagesArray[0])
-          }
-          showSnackbar(`${loadedCount} imagem(ns) carregada(s) com sucesso!`)
-        }
+      if (files.length === 0) {
+        showSnackbar('No image selected to upload.')
+        return
       }
-      img.onerror = (err) => {
-        console.error('Erro ao carregar a imagem:', err)
-        showSnackbar('Não foi possível carregar uma ou mais imagens.')
-        loadedCount++
-        if (loadedCount === files.length) {
-          setImages(newImagesArray)
-          if (newImagesArray.length > 0) {
-            setSelectedImage(newImagesArray[0])
+
+      // Clear selection and rectangles when loading new images
+      setSelectedImage(null)
+      setImages([])
+
+      let loadedCount = 0
+      const newImagesArray: ImageWithRects[] = []
+
+      files.forEach((file) => {
+        const id = uuidv4()
+        const img = new window.Image()
+        img.src = URL.createObjectURL(file)
+        img.onload = () => {
+          const newImage: ImageWithRects = { id, image: img, rects: [] }
+          newImagesArray.push(newImage)
+          loadedCount++
+
+          // When all images are loaded, update the states
+          if (loadedCount === files.length) {
+            setImages(newImagesArray)
+            // Sets the first image as selected by default
+            if (newImagesArray.length > 0) {
+              setSelectedImage(newImagesArray[0])
+            }
+            showSnackbar(`${loadedCount} imagem(ns) carregada(s) com sucesso!`)
           }
         }
-      }
-    })
-  }
+        img.onerror = (err) => {
+          console.error('Erro ao carregar a imagem:', err)
+          showSnackbar('Não foi possível carregar uma ou mais imagens.')
+          loadedCount++
+          if (loadedCount === files.length) {
+            setImages(newImagesArray)
+            if (newImagesArray.length > 0) {
+              setSelectedImage(newImagesArray[0])
+            }
+          }
+        }
+      })
+    },
+    [showSnackbar, setImages, setSelectedImage]
+  )
 
-  const handlerDeleteRectangle = ({ imageId, rectId }: DeleteRectangleProps) => {
-    const newImagesArr = images.map((img) => {
-      if (img.id === imageId) {
-        const newImg = {
-          ...img,
-          rects: img.rects.filter(({ id }) => id !== rectId),
+  const handlerDeleteRectangle = useCallback(
+    ({ imageId, rectId }: DeleteRectangleProps) => {
+      const newImagesArr = images.map((img) => {
+        if (img.id === imageId) {
+          const newImg = {
+            ...img,
+            rects: img.rects.filter(({ id }) => id !== rectId),
+          }
+          // Updates selectedImage if it is the image being edited
+          if (selectedImage && selectedImage.id === imageId) {
+            setSelectedImage(newImg)
+          }
+          return newImg
         }
-        // Updates selectedImage if it is the image being edited
-        if (selectedImage && selectedImage.id === imageId) {
-          setSelectedImage(newImg)
-        }
-        return newImg
-      }
-      return img
-    })
-    setImages(newImagesArr)
-    showSnackbar('Rectangle removed!')
-  }
+        return img
+      })
+      setImages(newImagesArr)
+      showSnackbar('Rectangle removed!')
+    },
+    [images, selectedImage, setImages, setSelectedImage, showSnackbar]
+  )
 
   const handleAddClassItem = useCallback(
     ({ name }: AddClassItemProps) => {
@@ -143,55 +149,72 @@ const TrainingPage = () => {
       setClassItemSelected(newClassId)
       showSnackbar(`Classe "${name}" add with success!`)
     },
-    [classItems, showSnackbar]
+    [classItems, showSnackbar, setClassItems, setClassItemSelected]
   )
 
-  const handleDeleteClassItem = (classIdToDelete: number) => {
-    if (classItemSelected === classIdToDelete) {
-      setClassItemSelected(-1) // Desseleciona se a classe ativa for removida
-    }
+  const handleDeleteClassItem = useCallback(
+    (classIdToDelete: number) => {
+      if (classItemSelected === classIdToDelete) {
+        setClassItemSelected(-1) // Desseleciona se a classe ativa for removida
+      }
 
-    const newClassItems = classItems.filter((item) => item.id !== classIdToDelete)
-    setClassItems(newClassItems)
+      const newClassItems = classItems.filter((item) => item.id !== classIdToDelete)
+      setClassItems(newClassItems)
 
-    // Remove retângulos associados à classe deletada de todas as imagens
-    setImages((prevImages) =>
-      prevImages.map((img) => {
-        const updatedRects = img.rects.filter((rect) => rect.classId !== classIdToDelete)
-        const updatedImage = { ...img, rects: updatedRects }
-        // Atualiza selectedImage se for a imagem afetada
-        if (selectedImage && selectedImage.id === img.id) {
-          setSelectedImage(updatedImage)
-        }
-        return updatedImage
-      })
-    )
-    showSnackbar('All tags using this class have all been removed.')
-  }
+      // Remove retângulos associados à classe deletada de todas as imagens
+      setImages((prevImages) =>
+        prevImages.map((img) => {
+          const updatedRects = img.rects.filter((rect) => rect.classId !== classIdToDelete)
+          const updatedImage = { ...img, rects: updatedRects }
+          // Atualiza selectedImage se for a imagem afetada
+          if (selectedImage && selectedImage.id === img.id) {
+            setSelectedImage(updatedImage)
+          }
+          return updatedImage
+        })
+      )
+      showSnackbar('All tags using this class have all been removed.')
+    },
+    [
+      classItemSelected,
+      classItems,
+      selectedImage,
+      setClassItems,
+      setImages,
+      setSelectedImage,
+      showSnackbar,
+    ]
+  )
 
-  const handleSetClassItem = (classIdToSelect: number) => {
-    // Toggles selection: clicking on it deselects it
-    setClassItemSelected((prev) => (prev === classIdToSelect ? -1 : classIdToSelect))
-  }
+  const handleSetClassItem = useCallback(
+    (classIdToSelect: number) => {
+      // Toggles selection: clicking on it deselects it
+      setClassItemSelected((prev) => (prev === classIdToSelect ? -1 : classIdToSelect))
+    },
+    [setClassItemSelected]
+  )
 
-  const onExportClick = (exportType: 'image' | 'yolo') => {
-    if (appDrawerExportRef.current) {
-      // Here, we just fire off the export and wait for it to handle the download (for PNG)
-      // or just generate the blob (for YOLO, if the download is done elsewhere)
-      appDrawerExportRef.current(exportType).then((blob) => {
-        // If it's YOLO and generated a blob, and you WANT TO DOWNLOAD IT HERE TOO:
-        if (blob instanceof Blob && exportType === 'yolo') {
-          const zipFileName = 'yolo_annotations.zip'
-          saveAs(blob, zipFileName) // Necessário importar saveAs para isso
-          showSnackbar('YOLO notes downloaded successfully!')
-        }
-      })
-    } else {
-      showSnackbar('The export system is not ready.')
-    }
-  }
+  const onExportClick = useCallback(
+    (exportType: 'image' | 'yolo') => {
+      if (appDrawerExportRef.current) {
+        // Here, we just fire off the export and wait for it to handle the download (for PNG)
+        // or just generate the blob (for YOLO, if the download is done elsewhere)
+        appDrawerExportRef.current(exportType).then((blob) => {
+          // If it's YOLO and generated a blob, and you WANT TO DOWNLOAD IT HERE TOO:
+          if (blob instanceof Blob && exportType === 'yolo') {
+            const zipFileName = 'yolo_annotations.zip'
+            saveAs(blob, zipFileName) // Necessário importar saveAs para isso
+            showSnackbar('YOLO notes downloaded successfully!')
+          }
+        })
+      } else {
+        showSnackbar('The export system is not ready.')
+      }
+    },
+    [showSnackbar]
+  )
 
-  const handleStartTraining = async () => {
+  const handleStartTraining = useCallback(async () => {
     if (!images || images.length === 0) {
       showSnackbar('Please upload images to start training.')
       return
@@ -242,34 +265,49 @@ const TrainingPage = () => {
         showSnackbar('Error starting training: An unknown error occurred.')
       }
     }
-  }
+  }, [classItems.length, images, showSnackbar])
 
   // Function that AppDrawer will call to update the rectangles of an image
-  const handleUpdateImageRects = (updatedImage: ImageWithRects) => {
-    setImages((prevImages) =>
-      prevImages.map((img) => (img.id === updatedImage.id ? updatedImage : img))
-    )
-    // It's crucial to update the selectedImage here so that AppDrawer re-renders
-    // with the new rectangles, since selectedImage is a prop for it.
-    if (selectedImage && selectedImage.id === updatedImage.id) {
-      setSelectedImage(updatedImage)
-    }
-  }
+  const handleUpdateImageRects = useCallback(
+    (updatedImage: ImageWithRects) => {
+      setImages((prevImages) =>
+        prevImages.map((img) => (img.id === updatedImage.id ? updatedImage : img))
+      )
+      // It's crucial to update the selectedImage here so that AppDrawer re-renders
+      // with the new rectangles, since selectedImage is a prop for it.
+      if (selectedImage && selectedImage.id === updatedImage.id) {
+        setSelectedImage(updatedImage)
+      }
+    },
+    [selectedImage]
+  )
+
+  const drawerContextValue = useMemo(
+    () => ({
+      classItems,
+      classItemSelected,
+      selectedImage,
+      images,
+      handleAddClassItem,
+      handleSetClassItem,
+      handleDeleteClassItem,
+      handlerDeleteRectangle,
+    }),
+    [
+      classItemSelected,
+      classItems,
+      handleAddClassItem,
+      handleDeleteClassItem,
+      handleSetClassItem,
+      handlerDeleteRectangle,
+      images,
+      selectedImage,
+    ]
+  )
 
   return (
     <Box>
-      <DrawerContext
-        value={{
-          classItems,
-          classItemSelected,
-          selectedImage,
-          images,
-          handleAddClassItem,
-          handleSetClassItem,
-          handleDeleteClassItem,
-          handlerDeleteRectangle,
-        }}
-      >
+      <DrawerContext value={drawerContextValue}>
         <GridStyled container spacing={0.5} columns={12}>
           <AppDrawerPanel
             onHandleExporting={onExportClick}

@@ -1,11 +1,11 @@
 import AddIcon from '@mui/icons-material/Add'
 import { Box, Button, Divider, Grid, Menu, MenuItem, Paper, Typography } from '@mui/material'
-import { useCallback, useState } from 'react'
-import { useDrawerContext } from '../pages/Training'
-import { AppCheckboxList } from './commons/AppCheckBoxList'
-import { AppInputWihtIcon } from './commons/AppInputWithIcon'
-import { AppRectList } from './commons/AppRectList'
-import { GridStyled } from './muiStyled/GridStyled'
+import React, { memo, useCallback, useState } from 'react'
+import { useDrawerContext } from '../../pages/Training'
+import { AppCheckboxList } from '../commons/AppCheckBoxList'
+import { AppInputWihtIcon } from '../commons/AppInputWithIcon'
+import { AppRectList } from '../commons/AppRectList'
+import { GridStyled } from '../muiStyled/GridStyled'
 
 type AppDrawerPanelProps = {
   onHandleExporting: (exportType: 'image' | 'yolo') => void
@@ -13,11 +13,11 @@ type AppDrawerPanelProps = {
   onStartTraining: () => void
 }
 
-export const AppDrawerPanel = ({
+export const AppDrawerPanel = memo(function AppDrawerPanel({
   onHandleExporting,
   onHandleUploading,
   onStartTraining,
-}: AppDrawerPanelProps) => {
+}: AppDrawerPanelProps) {
   const [newClassName, setNewClassName] = useState('')
   // State to control the export menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -164,4 +164,4 @@ export const AppDrawerPanel = ({
       </GridStyled>
     </Grid>
   )
-}
+})

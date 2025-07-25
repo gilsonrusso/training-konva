@@ -7,7 +7,7 @@ import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined'
 import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material'
 import JSZip from 'jszip'
 import type Konva from 'konva'
-import React, { useCallback, useEffect, useRef, useState, type ElementType } from 'react'
+import React, { memo, useCallback, useEffect, useRef, useState, type ElementType } from 'react'
 import {
   Image as KonvaImage,
   Line as KonvaLine,
@@ -17,11 +17,11 @@ import {
   Stage,
 } from 'react-konva'
 import { v4 as uuidv4 } from 'uuid'
-import { useSnackbar } from '../contexts/SnackBarContext'
-import { useDrawerContext } from '../pages/Training'
-import type { ImageWithRects, RectShape } from '../types/Shapes'
-import { ImageCarousel } from './commons/AppCarouselImage'
-import { GridStyled } from './muiStyled/GridStyled'
+import { useSnackbar } from '../../contexts/SnackBarContext'
+import { useDrawerContext } from '../../pages/Training'
+import type { ImageWithRects, RectShape } from '../../types/Shapes'
+import { ImageCarousel } from '../commons/AppCarouselImage'
+import { GridStyled } from '../muiStyled/GridStyled'
 
 /**
  * @enum {DrawTools}
@@ -136,13 +136,13 @@ type AppDrawerStageProps = {
   onSetExportFunction: (exportFn: (exportType: 'image' | 'yolo') => Promise<Blob | void>) => void // Callback to pass the export function to the parent
 }
 
-export const AppDrawerStage = ({
+export const AppDrawerStage = memo(function AppDrawerStage({
   images,
   selectedImage,
   onUpdateImageRects,
   onSetExportFunction,
   onSetSelectedImage,
-}: AppDrawerStageProps) => {
+}: AppDrawerStageProps) {
   /**
    * @state {CurrentDrawTool} currentTool
    * @description Stores the currently selected drawing tool by the user.
@@ -792,4 +792,4 @@ export const AppDrawerStage = ({
       </GridStyled>
     </Grid>
   )
-}
+})

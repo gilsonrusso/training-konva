@@ -3,7 +3,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
 import { Box, Grid, IconButton, Paper, useTheme } from '@mui/material'
 import ImageList from '@mui/material/ImageList'
 import ImageListItem from '@mui/material/ImageListItem'
-import { useEffect, useRef } from 'react' // Import useEffect
+import { memo, useEffect, useRef } from 'react' // Import useEffect
 import type { ImageWithRects } from '../../types/Shapes'
 import { Dot } from '../muiStyled/DotStyled'
 
@@ -15,11 +15,11 @@ type ImageCarouselProps = {
 const IMAGE_ITEM_WIDTH = 108
 const SCALE_FACTOR = 1.2
 
-export const ImageCarousel = ({
+export const ImageCarousel = memo(function ImageCarousel({
   images,
   selectedImage,
   onSetSelectedImage,
-}: ImageCarouselProps) => {
+}: ImageCarouselProps) {
   const scrollContainerRef = useRef<HTMLUListElement | null>(null)
 
   const theme = useTheme()
@@ -193,4 +193,4 @@ export const ImageCarousel = ({
       </Box>
     </Box>
   )
-}
+})
