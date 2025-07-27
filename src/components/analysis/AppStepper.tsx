@@ -87,7 +87,7 @@ export const AppStepper = () => {
   useEffect(() => {
     getAvailableRequirementsNames()
     getListAvailableRequirementsList()
-  }, [])
+  })
 
   return (
     <Box

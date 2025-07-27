@@ -1,4 +1,4 @@
-import { Alert, useTheme } from '@mui/material'
+import { Alert } from '@mui/material'
 import Snackbar from '@mui/material/Snackbar'
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react'
 
@@ -26,8 +26,6 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
     severity: 'info', // Padrão
     backgroundColor: undefined,
   })
-
-  const theme = useTheme()
 
   const showSnackbar = useCallback(
     (

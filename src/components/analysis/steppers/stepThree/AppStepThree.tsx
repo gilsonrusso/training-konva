@@ -31,7 +31,7 @@ interface AppReportStepProps {
 export const AppReportStep = ({ reportData }: AppReportStepProps) => {
   // Estado para gerenciar URLs de objetos para limpeza.
   // Isso é crucial para evitar vazamentos de memória ao usar URL.createObjectURL.
-  const [objectUrls, setObjectUrls] = useState<string[]>([])
+  const [, setObjectUrls] = useState<string[]>([])
 
   useEffect(() => {
     // Coleta todas as URLs de objetos que foram criadas para visualização de imagem.

@@ -165,9 +165,9 @@ export const handlers = [
         try {
           listNames = JSON.parse(String(value))
           console.log(`MSW: list_names recebido (JSON):`, listNames)
-        } catch (e) {
+        } catch (e: unknown) {
           listNames = [String(value)] // Se não for JSON, trate como string simples
-          console.log(`MSW: list_names recebido (string):`, listNames)
+          console.log(`MSW: list_names recebido (string):`, listNames, e)
         }
       } else if (key === 'requirements') {
         try {

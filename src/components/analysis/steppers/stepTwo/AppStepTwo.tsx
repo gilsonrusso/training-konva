@@ -23,7 +23,7 @@ import { AppDragAndDrop } from '../../../commons/DragAndDrop' // Verifique se o 
 interface AnalysisResult {
   success: boolean
   message: string
-  data: any
+  data: unknown
 }
 export interface AppStepTwoHandles {
   analyzeImages: () => Promise<AnalysisResult> // Função para analisar e enviar
