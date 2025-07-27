@@ -16,7 +16,7 @@ import {
 import List from '@mui/material/List'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 
 interface CreatedListItem {
   id_: string // ID do item dentro da lista criada (o '_id' do backend)
@@ -32,83 +32,78 @@ interface FetchedCreatedList {
 
 interface CreatedListComponentProps {
   list: FetchedCreatedList
-  availableAllRequirementNames: string[] // Nomes dos requisitos disponíveis para Autocomplete
-  onDeleteList: (listId: string) => void
-  onSaveList: (listToSave: FetchedCreatedList) => void // Para salvar na API
-  isSelected: boolean // Para controlar a seleção desta lista
-  onSelect: (listId: string) => void // Callback para selecionar esta lista
+  availableAllRequirementNames: string[] // Vem do CreatedListsSection (que pega do context)
+  onDeleteList: (listId: string) => void // Vem do CreatedListsSection (que pega do context)
+  onSaveList: (listToSave: FetchedCreatedList) => void // Vem do CreatedListsSection (que pega do context)
+  isSelected: boolean
+  onSelect: (listId: string) => void // Vem do CreatedListsSection (que pega do context)
 }
-
-export const CreatedListComponent = ({
+export const CreatedListComponent = memo(function CreatedListComponent({
   list,
   availableAllRequirementNames,
+  isSelected,
   onDeleteList,
   onSaveList,
-  isSelected,
   onSelect,
-}: CreatedListComponentProps) => {
-  const [editingListName, setEditingListName] = useState<boolean>(false)
-  const [editedListName, setEditedListName] = useState<string>(list.name)
-  const [selectedNewRequirementName, setSelectedNewRequirementName] = useState<string | null>(null)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+}: CreatedListComponentProps) {
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [currentListName, setCurrentListName] = useState(list.name)
   const [currentRequirements, setCurrentRequirements] = useState<CreatedListItem[]>(
     list.requirements
   )
+  const [selectedNewRequirementName, setSelectedNewRequirementName] = useState<string | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
-  // Sincroniza o estado interno com as props e reseta o sinal de mudanças
+  // Use useEffect para verificar mudanças
   useEffect(() => {
-    setEditedListName(list.name)
-    setCurrentRequirements(list.requirements)
-    setHasUnsavedChanges(false) // Reseta ao carregar uma nova lista ou quando a lista é salva externamente
-  }, [list]) // Depende do objeto list inteiro, para detectar mudanças
+    const originalName = list.name
+    const originalRequirements = list.requirements
+      .map((r) => r.name)
+      .sort()
+      .join(',')
+    const currentRequirementsSorted = currentRequirements
+      .map((r) => r.name)
+      .sort()
+      .join(',')
 
-  // Verifica mudanças no nome ou nos requisitos
-  useEffect(() => {
-    const isNameChanged = editedListName !== list.name
-    const isRequirementsChanged =
-      JSON.stringify(currentRequirements) !== JSON.stringify(list.requirements)
-    setHasUnsavedChanges(isNameChanged || isRequirementsChanged)
-  }, [editedListName, currentRequirements, list.name, list.requirements])
+    const nameChanged = originalName !== currentListName
+    const requirementsChanged = originalRequirements !== currentRequirementsSorted
 
-  const handleEditListNameClick = () => {
-    setEditingListName(true)
-  }
+    setHasUnsavedChanges(nameChanged || requirementsChanged)
+  }, [currentListName, currentRequirements, list.name, list.requirements])
 
-  const handleSaveListName = () => {
-    // A verificação de mudança de nome já é feita no useEffect, aqui apenas aplica
-    if (editingListName) {
-      // Só salva se estiver no modo de edição
-      setEditingListName(false)
-    }
+  const handleSaveList = () => {
+    onSaveList({
+      ...list,
+      name: currentListName,
+      requirements: currentRequirements,
+    })
+    setIsEditingName(false) // Sai do modo de edição após salvar
+    setHasUnsavedChanges(false) // Limpa o estado de mudanças
   }
 
   const handleAddChosenRequirement = () => {
     if (selectedNewRequirementName) {
-      const isAlreadyInList = currentRequirements.some(
+      // Verifica se o requisito já existe na lista atual
+      const isAlreadyAdded = currentRequirements.some(
         (req) => req.name === selectedNewRequirementName
       )
-      if (isAlreadyInList) {
-        alert('Este requisito já está nesta lista.')
-        return
+
+      if (!isAlreadyAdded) {
+        const newRequirement: CreatedListItem = {
+          id_: `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+          name: selectedNewRequirementName,
+        }
+        setCurrentRequirements((prev) => [...prev, newRequirement])
+        setSelectedNewRequirementName(null) // Limpa o Autocomplete
+        // setHasUnsavedChanges(true); // Já é tratado pelo useEffect acima
       }
-      const newReq: CreatedListItem = {
-        id_: `item-${Date.now()}-${currentRequirements.length}`,
-        name: selectedNewRequirementName,
-      }
-      setCurrentRequirements((prev) => [...prev, newReq])
-      setSelectedNewRequirementName(null)
-      // setHasUnsavedChanges(true) é feito pelo useEffect
     }
   }
 
-  const handleRemoveItem = (itemId: string) => {
-    setCurrentRequirements((prev) => prev.filter((item) => item.id_ !== itemId))
-    // setHasUnsavedChanges(true) é feito pelo useEffect
-  }
-
-  const handleSaveList = () => {
-    onSaveList({ ...list, name: editedListName, requirements: currentRequirements })
-    // setHasUnsavedChanges(false) é feito pelo useEffect quando a prop 'list' é atualizada
+  const handleDeleteRequirement = (idToDelete: string) => () => {
+    setCurrentRequirements((prev) => prev.filter((req) => req.id_ !== idToDelete))
+    // setHasUnsavedChanges(true); // Já é tratado pelo useEffect acima
   }
 
   return (
@@ -125,14 +120,17 @@ export const CreatedListComponent = ({
                 <Checkbox checked={isSelected} onChange={() => onSelect(list.id)} size="small" />
               }
               label={
-                editingListName ? (
+                isEditingName ? (
                   <TextField
-                    value={editedListName}
-                    onChange={(e) => setEditedListName(e.target.value)}
-                    onBlur={handleSaveListName}
-                    onKeyPress={(e) => {
+                    value={currentListName}
+                    onChange={(e) => {
+                      setCurrentListName(e.target.value)
+                      // setHasUnsavedChanges(true); // Já é tratado pelo useEffect acima
+                    }}
+                    onBlur={() => setIsEditingName(false)}
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleSaveListName()
+                        setIsEditingName(false)
                       }
                     }}
                     size="small"
@@ -152,8 +150,12 @@ export const CreatedListComponent = ({
                       fontSize: '0.9rem',
                     }}
                   >
-                    {list.name}
-                    <IconButton size="small" sx={{ ml: 0.5 }} onClick={handleEditListNameClick}>
+                    {currentListName}
+                    <IconButton
+                      sx={{ cursor: 'pointer', ml: 0.5 }}
+                      size="small"
+                      onClick={() => setIsEditingName(true)}
+                    >
                       <EditIcon fontSize="inherit" />
                     </IconButton>
                   </Box>
@@ -177,7 +179,7 @@ export const CreatedListComponent = ({
               sx={{ '& .MuiListItemText-primary': { fontSize: '0.8rem' } }}
             />
             <Box sx={{ ml: 'auto' }}>
-              <IconButton size="small" onClick={() => handleRemoveItem(req.id_)}>
+              <IconButton size="small" onClick={handleDeleteRequirement(req.id_)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -228,4 +230,4 @@ export const CreatedListComponent = ({
       </Box>
     </Card>
   )
-}
+})

@@ -6,6 +6,7 @@ import List from '@mui/material/List'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
+import { memo } from 'react'
 
 function intersection<T>(a: readonly T[], b: readonly T[]) {
   return a.filter((value) => b.includes(value))
@@ -19,13 +20,13 @@ interface PrimarySelectionListProps {
   onToggleAll: (itemsToToggle: readonly string[]) => () => void
 }
 
-export const PrimarySelectionList = ({
+export const PrimarySelectionList = memo(function PrimarySelectionList({
   checkedItems,
   items,
   onToggleAll,
   onToggleItem,
   title,
-}: PrimarySelectionListProps) => {
+}: PrimarySelectionListProps) {
   const numberOfChecked = (itemsToCount: readonly string[]) =>
     intersection(checkedItems, itemsToCount).length
 
@@ -84,4 +85,4 @@ export const PrimarySelectionList = ({
       </List>
     </Card>
   )
-}
+})

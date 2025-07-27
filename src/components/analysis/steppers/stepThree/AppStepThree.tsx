@@ -19,7 +19,7 @@ interface ImageReport {
 }
 
 // Define o tipo para os dados gerais do relatório que este componente receberá
-interface AnalysisReportData {
+export interface AnalysisReportData {
   overallSummary: string // Um resumo geral da análise
   imageReports: ImageReport[] // Um array com os relatórios de cada imagem
 }

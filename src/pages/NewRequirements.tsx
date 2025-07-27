@@ -6,7 +6,7 @@ import { AppDrawerPanel } from '../components/requirements/AppDrawerPanel'
 import { AppDrawerStage } from '../components/requirements/AppDrawerStage'
 import { RANDOM_RGBA_COLORS, RANDOM_SOLID_COLORS } from '../constants/rgbaOptions'
 import { useSnackbar } from '../contexts/SnackBarContext'
-import { yoloUploadService } from '../services/yoloUploadService'
+import { YoloService } from '../services/yoloUploadService'
 import type { ClassDefinition, ImageWithRects } from '../types/Shapes'
 
 const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
@@ -34,7 +34,7 @@ type DrawerContextType = {
 
 const DrawerContext = createContext({} as DrawerContextType)
 
-const TrainingPage = () => {
+const NewRequirementsPage = () => {
   const [images, setImages] = useState<ImageWithRects[]>([])
   const [selectedImage, setSelectedImage] = useState<ImageWithRects | null>(null)
 
@@ -68,7 +68,7 @@ const TrainingPage = () => {
         const img = new window.Image()
         img.src = URL.createObjectURL(file)
         img.onload = () => {
-          const newImage: ImageWithRects = { id, image: img, rects: [] }
+          const newImage: ImageWithRects = { id, image: img, rects: [], originalFile: file }
           newImagesArray.push(newImage)
           loadedCount++
 
@@ -214,13 +214,20 @@ const TrainingPage = () => {
     [showSnackbar]
   )
 
+  const handleResetStates = () => {
+    setImages([])
+    setClassItems([])
+    setSelectedImage(null)
+    setClassItemSelected(-1)
+  }
+
   const handleStartTraining = useCallback(async () => {
     if (!images || images.length === 0) {
       showSnackbar('Please upload images to start training.')
       return
     }
     if (classItems.length === 0) {
-      showSnackbar('Please add annotation classes before starting training.')
+      showSnackbar('Please add classeName before starting training.')
       return
     }
     if (!appDrawerExportRef.current) {
@@ -228,27 +235,34 @@ const TrainingPage = () => {
       return
     }
 
-    showSnackbar('Starting training process...')
+    showSnackbar('Starting training process and preparing files for upload...', 'info')
 
     try {
-      // 1. Generate YOLO annotations (ZIP Blob)
+      // 1. Gerar as anotações YOLO E as imagens (conforme sua indicação, o appDrawerExportRef.current('yolo') já faz isso)
       const yoloZipBlob = await appDrawerExportRef.current('yolo')
 
       if (!yoloZipBlob) {
-        showSnackbar('No YOLO annotations generated for training.')
+        showSnackbar('No YOLO annotations or images generated for training.', 'warning') // Alterado para warning
         return
       }
 
-      // 2. Create a File object from the Blob
-      const yoloZipFile = new File([yoloZipBlob], 'yolo_annotations.zip', {
-        type: 'application/zip',
-      })
+      const currentTrainingListNames = classItems.map((cl) => cl.name).join(',')
 
-      // 3. Upload the ZIP file to the upload service
-      // Note: the service expects an array of Files.
-      const uploadResponse = await yoloUploadService.uploadYOLOAnnotations({ files: [yoloZipFile] })
+      // 2. Criar um objeto FormData (NOVA RESPONSABILIDADE AQUI)
+      const formData = new FormData()
 
-      showSnackbar(`Training started! Upload completed: ${uploadResponse.message}`)
+      // 3. Adicionar o Blob ZIP (que contém YOLO e Imagens) ao FormData
+      // O nome do arquivo no FormData é importante para o backend.
+      formData.append('arquivos', yoloZipBlob, 'yolo_training_data.zip')
+      formData.append('list_names', currentTrainingListNames)
+
+      // 4. Upload the ZIP file to the upload service
+      const uploadResponse = await YoloService.startYoloAnalysis(formData)
+
+      showSnackbar(
+        `Training started! Upload completed. Analysis ID: ${uploadResponse.id}`,
+        'success'
+      )
       console.log('Upload response for training:', uploadResponse)
 
       // Here you can add additional logic, such as:
@@ -264,8 +278,10 @@ const TrainingPage = () => {
       } else {
         showSnackbar('Error starting training: An unknown error occurred.')
       }
+    } finally {
+      handleResetStates()
     }
-  }, [classItems.length, images, showSnackbar])
+  }, [classItems, images, showSnackbar])
 
   // Function that AppDrawer will call to update the rectangles of an image
   const handleUpdateImageRects = useCallback(
@@ -330,4 +346,4 @@ const TrainingPage = () => {
 }
 
 export const useDrawerContext = () => useContext(DrawerContext)
-export default TrainingPage
+export default NewRequirementsPage

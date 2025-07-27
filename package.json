@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix",
     "format": "prettier --write \"./**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "preview": "vite preview",
-    "server:dev": "npm --prefix backend run dev"
+    "msw": "npx msw init public/ --save"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -23,6 +23,7 @@
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "konva": "^9.3.22",
+    "motion": "^12.23.9",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-konva": "^19.0.7",
@@ -47,10 +48,16 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
+    "msw": "^2.10.4",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.11",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

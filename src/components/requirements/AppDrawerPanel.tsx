@@ -1,11 +1,12 @@
 import AddIcon from '@mui/icons-material/Add'
 import { Box, Button, Divider, Grid, Menu, MenuItem, Paper, Typography } from '@mui/material'
-import React, { memo, useCallback, useState } from 'react'
-import { useDrawerContext } from '../../pages/Training'
+import { useDrawerContext } from '@pages/NewRequirements'
+import React, { memo, useCallback, useRef, useState } from 'react'
+import { containerVariants } from '../../layout/animations/variants'
 import { AppCheckboxList } from '../commons/AppCheckBoxList'
 import { AppInputWihtIcon } from '../commons/AppInputWithIcon'
 import { AppRectList } from '../commons/AppRectList'
-import { GridStyled } from '../muiStyled/GridStyled'
+import { AnimatedGridStyled } from '../commons/muiMotions/AnimatedGridStyled'
 
 type AppDrawerPanelProps = {
   onHandleExporting: (exportType: 'image' | 'yolo') => void
@@ -22,6 +23,7 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
   // State to control the export menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const openExportMenu = Boolean(anchorEl)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { handleAddClassItem, images } = useDrawerContext()
 
@@ -56,7 +58,14 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
   return (
     <Grid container spacing={0.5} flexDirection={'column'} size={{ xs: 12, sm: 12, md: 3 }}>
       {/* Classes List - Section  */}
-      <GridStyled container spacing={0} flexDirection={'column'} sx={{ borderRadius: '8px 0 0 0' }}>
+      <AnimatedGridStyled
+        layout
+        variants={containerVariants}
+        container
+        spacing={0}
+        flexDirection={'column'}
+        sx={{ borderRadius: '8px 0 0 0' }}
+      >
         <Grid padding={1}>
           <AppInputWihtIcon
             disabled={newClassName.length === 0}
@@ -69,10 +78,10 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
           />
           <AppCheckboxList />
         </Grid>
-      </GridStyled>
+      </AnimatedGridStyled>
       {/* Rect List - Section  */}
-
-      <GridStyled
+      <AnimatedGridStyled
+        variants={containerVariants}
         container
         // sx={{ maxHeight: '288px' }}
         spacing={0}
@@ -82,9 +91,13 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
         <Box padding={1} flexGrow={1}>
           <AppRectList />
         </Box>
-      </GridStyled>
+      </AnimatedGridStyled>
       {/* Export | Upload - Section  */}
-      <GridStyled sx={{ maxHeight: '170px', padding: '4px' }} flexGrow={1}>
+      <AnimatedGridStyled
+        variants={containerVariants}
+        sx={{ maxHeight: '170px', padding: '4px' }}
+        flexGrow={1}
+      >
         <Paper sx={{ height: '100%', padding: 1 }}>
           <Grid container display={'flex'} flexDirection={'column'}>
             <Grid sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -97,7 +110,7 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
                 aria-expanded={openExportMenu ? 'true' : undefined}
                 onClick={handleExportMenuClick}
                 variant="outlined"
-                disabled={images.length === 0}
+                disabled={images?.length === 0}
               >
                 Export
               </Button>
@@ -123,6 +136,7 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
               <Box sx={{ display: 'flex', width: '100%' }}>
                 <input
                   type="file"
+                  ref={fileInputRef}
                   accept="image/*"
                   multiple
                   onChange={onHandleUploading}
@@ -138,9 +152,10 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
             </Grid>
           </Grid>
         </Paper>
-      </GridStyled>
+      </AnimatedGridStyled>
       {/* Summary - Section  */}
-      <GridStyled
+      <AnimatedGridStyled
+        variants={containerVariants}
         sx={{ borderRadius: '0 0 0 8px', maxHeight: '80px', padding: '4px' }}
         flexGrow={1}
       >
@@ -161,7 +176,7 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
             </Grid>
           </Grid>
         </Paper>
-      </GridStyled>
+      </AnimatedGridStyled>
     </Grid>
   )
 })

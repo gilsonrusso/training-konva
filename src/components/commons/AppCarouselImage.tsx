@@ -5,7 +5,7 @@ import ImageList from '@mui/material/ImageList'
 import ImageListItem from '@mui/material/ImageListItem'
 import { memo, useEffect, useRef } from 'react' // Import useEffect
 import type { ImageWithRects } from '../../types/Shapes'
-import { Dot } from '../muiStyled/DotStyled'
+import { Dot } from './muiStyled/DotStyled'
 
 type ImageCarouselProps = {
   images: ImageWithRects[]

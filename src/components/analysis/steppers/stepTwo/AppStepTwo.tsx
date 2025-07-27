@@ -18,7 +18,7 @@ import type { FetchedCreatedList } from '../../../../types/requirements'
 
 import JSZip from 'jszip'
 import { useUnsavedChanges } from '../../../../contexts/UnsavedChangesContext'
-import { AppDragAndDrop } from '../../DragAndDrop' // Verifique se o caminho está correto
+import { AppDragAndDrop } from '../../../commons/DragAndDrop' // Verifique se o caminho está correto
 
 interface AnalysisResult {
   success: boolean

@@ -13,17 +13,15 @@ import {
   type BoxProps,
   type IconButtonProps,
 } from '@mui/material'
-import { styled, useTheme } from '@mui/material/styles'
+import { styled } from '@mui/material/styles'
 
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
 import HomeIcon from '@mui/icons-material/Home'
 import TableViewIcon from '@mui/icons-material/TableView'
-import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router'
-import BasicSwitches from './components/layout/DarkMode'
-import { StyledNavLink } from './components/muiStyled/NavLinkStyled'
-import { UserService } from './services/userServices'
-import type { User } from './types/user.types'
+import { StyledNavLink } from './components/commons/muiStyled/NavLinkStyled'
+import BasicSwitches from './layout/commons/DarkMode'
+import { theme } from './layout/theme'
 
 const BoxStyled = styled(Box)<BoxProps>(({ theme }) => ({
   height: '100vh',
@@ -38,37 +36,6 @@ const AppBarStyled = styled(AppBar)<AppBarProps>(({ theme }) => ({
 }))
 
 function App() {
-  const theme = useTheme()
-
-  const [users, setUsers] = useState<User[]>([])
-  const controller = new AbortController()
-
-  console.log(`:::`, users)
-
-  async function fetchUsers() {
-    try {
-      const response = await UserService.getAll(controller.signal)
-      setUsers(response)
-    } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'CanceledError') {
-        console.warn('Requisição cancelada')
-      } else if (error instanceof Error) {
-        console.error('Erro geral:', error.message)
-      } else {
-        console.error('Erro desconhecido:', error)
-      }
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-
-    return () => {
-      controller.abort()
-      // abortManager.abort('getAllUsers')
-    }
-  }, [])
-
   return (
     <BoxStyled>
       <AppBarStyled>
@@ -88,10 +55,7 @@ function App() {
               />
               <Typography sx={{ marginLeft: '5px' }}>Sasy</Typography>
             </Grid>
-            <Grid
-              flexGrow={8}
-              sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 5 }}
-            >
+            <Grid sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5 }}>
               <StyledNavLink
                 to={{
                   pathname: '/',
@@ -100,29 +64,29 @@ function App() {
               >
                 <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
                   <HomeIcon />
-                  <Typography paddingTop={1}>Home</Typography>
+                  <Typography paddingTop={1}>Analysis</Typography>
                 </Box>
               </StyledNavLink>
               <StyledNavLink
                 to={{
-                  pathname: '/list',
-                }}
-                className={({ isActive }) => `${isActive ? 'active' : ''}`}
-              >
-                <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <TableViewIcon />
-                  <Typography paddingTop={1}>list</Typography>
-                </Box>
-              </StyledNavLink>
-              <StyledNavLink
-                to={{
-                  pathname: '/training',
+                  pathname: '/new-requirements',
                 }}
                 className={({ isActive }) => `${isActive ? 'active' : ''}`}
               >
                 <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
                   <FitnessCenterIcon />
-                  <Typography paddingTop={1}>Training</Typography>
+                  <Typography paddingTop={1}>New Requirements</Typography>
+                </Box>
+              </StyledNavLink>
+              <StyledNavLink
+                to={{
+                  pathname: '/training-history',
+                }}
+                className={({ isActive }) => `${isActive ? 'active' : ''}`}
+              >
+                <Box gap={1} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <TableViewIcon />
+                  <Typography paddingTop={1}>Training History</Typography>
                 </Box>
               </StyledNavLink>
             </Grid>

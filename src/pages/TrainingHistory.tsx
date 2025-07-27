@@ -44,7 +44,7 @@ const rows = [
   { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
 ]
 
-export default function DataGridDemo() {
+export default function TrainingHistoryPage() {
   return (
     <Box sx={{ height: 400, width: '100%' }}>
       <DataGrid

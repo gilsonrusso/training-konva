@@ -33,9 +33,14 @@ export function setInterceptors(api: AxiosInstance) {
       return response
     },
     (error: AxiosError) => {
-      console.error('[Axios Error]', error.message)
+      // console.error('[Axios Error]', error.message)
       // Dispara um evento customizado para esconder o loading em caso de erro na resposta
       window.dispatchEvent(new CustomEvent('loading:hide'))
+
+      if (error instanceof Error && error.name === 'CanceledError') {
+        console.warn('Requisição cancelada')
+        return
+      }
 
       if (error.response?.status === 401) {
         console.warn('Não autorizado — redirecionando ou limpando sessão')

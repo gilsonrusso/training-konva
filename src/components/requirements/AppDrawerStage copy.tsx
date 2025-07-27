@@ -18,7 +18,7 @@ import {
 import { v4 as uuidv4 } from 'uuid' // Para gerar IDs únicos para os retângulos
 import type { ImageWithRects, RectShape } from '../../types/Shapes' // Tipos personalizados para imagens e formas
 import { ImageCarousel } from '../commons/AppCarouselImage' // Componente para exibir o carrossel de imagens
-import { GridStyled } from '../muiStyled/GridStyled' // Componente estilizado de Grid do Material-UI
+import { GridStyled } from '../commons/muiStyled/GridStyled' // Componente estilizado de Grid do Material-UI
 
 // --- Definições de Enums e Tipos ---
 

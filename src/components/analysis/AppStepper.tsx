@@ -4,12 +4,12 @@ import Button from '@mui/material/Button'
 import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
 import Stepper, { type StepperProps } from '@mui/material/Stepper'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAnalysis } from '../../contexts/AnalysisContext'
 import { useSnackbar } from '../../contexts/SnackBarContext'
 import { useUnsavedChanges } from '../../contexts/UnsavedChangesContext'
-import type { FetchedCreatedList } from '../../types/requirements'
 import { AppStepOne } from './steppers/stepOne/AppStepOne'
-import { AppReportStep } from './steppers/stepThree/AppStepThree'
+import { AppReportStep, type AnalysisReportData } from './steppers/stepThree/AppStepThree'
 import { AppStepTwo, type AppStepTwoHandles } from './steppers/stepTwo/AppStepTwo'
 
 const steps = ['Select or Create a list', 'Upload Images', 'Report']
@@ -20,48 +20,52 @@ export const StepperStyled = styled(Stepper)<StepperProps>(() => ({
 
 export const AppStepper = () => {
   const [activeStep, setActiveStep] = useState(0)
-  const [selectedListFromStep1, setSelectedListFromStep1] = useState<FetchedCreatedList | null>(
-    null
-  )
+
   const [stepTwoHasImages, setStepTwoHasImages] = useState(false)
   const appStepTwoRef = useRef<AppStepTwoHandles>(null)
 
-  const [analysisReportData, setAnalysisReportData] = useState<any>(null)
+  const [analysisReportData, setAnalysisReportData] = useState<AnalysisReportData | null>(null)
 
   const { showSnackbar } = useSnackbar()
   const { markAsClean } = useUnsavedChanges()
+  // Use o hook para acessar o contexto de requisitos
+  const {
+    selectedListForAppStepper,
+    selectListForAppStepper,
+    getAvailableRequirementsNames,
+    getListAvailableRequirementsList,
+  } = useAnalysis()
 
   const theme = useTheme()
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     if (activeStep === 1) {
+      // Se estiver no passo 2 (index 1), tentar analisar
       if (appStepTwoRef.current) {
-        if (!appStepTwoRef.current) {
-          showSnackbar('Por favor, carregue pelo menos uma imagem para análise.', 'warning')
-          return
-        }
         try {
-          const analysisResult = await appStepTwoRef.current.analyzeImages()
-          console.log('Resultado da análise:', analysisResult)
-          showSnackbar('Análise concluída com sucesso!', 'success')
-
-          // TODO MOCK RESULT
-          setAnalysisReportData(analysisResult.data)
-
-          markAsClean()
-          setActiveStep((prevActiveStep) => prevActiveStep + 1)
-        } catch (error) {
-          showSnackbar(
-            `Erro na análise: ${error instanceof Error ? error.message : String(error)}`,
-            'error'
-          )
-          return
+          const result = await appStepTwoRef.current.analyzeImages()
+          if (result.success) {
+            setAnalysisReportData(result.data) // Armazena os dados do relatório
+            setActiveStep((prevActiveStep) => prevActiveStep + 1) // Avança para o passo de relatório
+            showSnackbar('Análise concluída com sucesso!', 'success')
+          } else {
+            showSnackbar(`Erro na análise: ${result.message}`, 'error')
+          }
+        } catch (error: unknown) {
+          console.error('Error starting training or uploading:', error)
+          if (error instanceof Error) {
+            showSnackbar(`Error starting training: ${error.message}`)
+          } else if (typeof error === 'string') {
+            showSnackbar(`Error starting training: ${error}`)
+          } else {
+            showSnackbar('Error starting training: An unknown error occurred.')
+          }
         }
       }
     } else {
       setActiveStep((prevActiveStep) => prevActiveStep + 1)
     }
-  }
+  }, [activeStep, showSnackbar])
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1)
@@ -69,18 +73,20 @@ export const AppStepper = () => {
 
   const handleReset = () => {
     setActiveStep(0)
-    setSelectedListFromStep1(null)
+    // Reinicie os estados do stepper
+    selectListForAppStepper(null) // Deseleciona a lista no contexto
     setStepTwoHasImages(false)
-    markAsClean()
-  }
-
-  const handleListSelected = (list: FetchedCreatedList | null) => {
-    setSelectedListFromStep1(list)
-    showSnackbar(`Lista "${list?.name}" selecionada.`, 'info')
+    setAnalysisReportData(null)
+    markAsClean() // Marcar como limpo
   }
 
   const handleStepTwoHasImagesChange = useCallback((hasImages: boolean) => {
     setStepTwoHasImages(hasImages)
+  }, [])
+
+  useEffect(() => {
+    getAvailableRequirementsNames()
+    getListAvailableRequirementsList()
   }, [])
 
   return (
@@ -109,15 +115,10 @@ export const AppStepper = () => {
 
       <>
         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          {activeStep === 0 && (
-            <AppStepOne
-              onListSelected={handleListSelected}
-              selectedListIdForStepper={selectedListFromStep1?.id || null}
-            />
-          )}
+          {activeStep === 0 && <AppStepOne />}
           {activeStep === 1 && (
             <AppStepTwo
-              selectedList={selectedListFromStep1}
+              selectedList={selectedListForAppStepper}
               ref={appStepTwoRef}
               onHasImagesChange={handleStepTwoHasImagesChange}
             />
@@ -144,7 +145,7 @@ export const AppStepper = () => {
               onClick={handleNext}
               disabled={
                 (activeStep === 1 && !stepTwoHasImages) ||
-                (activeStep === 0 && !selectedListFromStep1)
+                (activeStep === 0 && !selectedListForAppStepper)
               }
             >
               {activeStep === 1 ? 'Analisar' : 'Próximo'}

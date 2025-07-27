@@ -1,41 +1,24 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import { memo } from 'react'
+import { useAnalysis } from '../../../../contexts/AnalysisContext'
 import { CreatedListComponent } from './CreatedListComponent'
 
-// Tipos necessários, re-importados ou definidos para este componente
-interface CreatedListItem {
-  id_: string
-  name: string
-}
+export const CreatedListsSection = memo(function CreatedListsSection() {
+  const {
+    createdLists,
+    availableRequirementsNames, // Renomeado para consistência
+    deleteList,
+    saveListEdits,
+    selectListForAppStepper, // Função de seleção
+    selectedListForAppStepper, // Lista selecionada
+  } = useAnalysis()
 
-interface FetchedCreatedList {
-  id: string
-  name: string
-  requirements: CreatedListItem[]
-}
+  // Mapeia a seleção do contexto para a prop de isSelected no CreatedListComponent
+  const selectedListIdForStep = selectedListForAppStepper?.id || null
 
-interface CreatedListsSectionProps {
-  createdLists: FetchedCreatedList[]
-  availableAllRequirementNames: string[]
-  onDeleteList: (listId: string) => void
-  onSaveListEdits: (listToSave: FetchedCreatedList) => void
-  selectedListIdForStep: string | null
-  onSelectCreatedList: (listId: string) => void
-}
-
-export const CreatedListsSection = ({
-  createdLists,
-  availableAllRequirementNames,
-  onDeleteList,
-  onSaveListEdits,
-  selectedListIdForStep,
-  onSelectCreatedList,
-}: CreatedListsSectionProps) => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="h6" sx={{ mb: 2, whiteSpace: 'nowrap' }}>
-        List
-      </Typography>
       <Box
         sx={{
           flexGrow: 1,
@@ -62,11 +45,11 @@ export const CreatedListsSection = ({
               >
                 <CreatedListComponent
                   list={list}
-                  availableAllRequirementNames={availableAllRequirementNames}
-                  onDeleteList={onDeleteList}
-                  onSaveList={onSaveListEdits}
-                  isSelected={selectedListIdForStep === list.id}
-                  onSelect={onSelectCreatedList}
+                  availableAllRequirementNames={availableRequirementsNames} // Do contexto
+                  onDeleteList={deleteList} // Do contexto
+                  onSaveList={saveListEdits} // Do contexto
+                  isSelected={selectedListIdForStep === list.id} // Do contexto/estado local mapeado
+                  onSelect={selectListForAppStepper} // Do contexto
                 />
               </Box>
             ))}
@@ -75,4 +58,4 @@ export const CreatedListsSection = ({
       </Box>
     </Box>
   )
-}
+})

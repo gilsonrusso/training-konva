@@ -14,6 +14,7 @@ export type ImageWithRects = {
   id: string
   image: HTMLImageElement
   rects: RectShape[]
+  originalFile: File
 }
 
 export interface ClassDefinition {

@@ -1,3 +1,6 @@
+import type { ImageWithRects, RectShape } from '@/types/Shapes'
+import { useSnackbar } from '@contexts/SnackBarContext'
+import { slideInFromLeft } from '@layout/animations/variants'
 import AdsClickOutlinedIcon from '@mui/icons-material/AdsClickOutlined'
 import AdUnitsOutlinedIcon from '@mui/icons-material/AdUnitsOutlined'
 import ArrowOutwardOutlinedIcon from '@mui/icons-material/ArrowOutwardOutlined'
@@ -5,6 +8,7 @@ import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined'
 import Crop54Icon from '@mui/icons-material/Crop54'
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined'
 import { Box, Grid, IconButton, Typography, useTheme } from '@mui/material'
+import { useDrawerContext } from '@pages/NewRequirements'
 import JSZip from 'jszip'
 import type Konva from 'konva'
 import React, { memo, useCallback, useEffect, useRef, useState, type ElementType } from 'react'
@@ -17,11 +21,9 @@ import {
   Stage,
 } from 'react-konva'
 import { v4 as uuidv4 } from 'uuid'
-import { useSnackbar } from '../../contexts/SnackBarContext'
-import { useDrawerContext } from '../../pages/Training'
-import type { ImageWithRects, RectShape } from '../../types/Shapes'
 import { ImageCarousel } from '../commons/AppCarouselImage'
-import { GridStyled } from '../muiStyled/GridStyled'
+import { AnimatedGridStyled } from '../commons/muiMotions/AnimatedGridStyled'
+import { GridStyled } from '../commons/muiStyled/GridStyled'
 
 /**
  * @enum {DrawTools}
@@ -300,6 +302,16 @@ export const AppDrawerStage = memo(function AppDrawerStage({
           showSnackbar('No annotated rectangles found for export in YOLO format')
           return
         }
+
+        images.forEach((img) => {
+          const imageFileName = img.image.src.split('/').pop()?.split('.')[0] || `image_${img.id}`
+          const imageFileExt = img.originalFile.name.split('/').pop()?.split('.')[1]
+          console.log('::::img', img)
+          console.log('::::imageFileName', imageFileName)
+          console.log('::::imageFileExt', imageFileExt)
+          zip.file(`${imageFileName}.${imageFileExt}`, img.originalFile)
+        })
+
         const blob = await zip.generateAsync({ type: 'blob' })
 
         // const zipFileName = 'yolo_annotations.zip'
@@ -502,8 +514,8 @@ export const AppDrawerStage = memo(function AppDrawerStage({
     let newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy
 
     // Limits the zoom to prevent the image from becoming too small or too large.
-    const minScale = 0.05
-    const maxScale = 10
+    const minScale = 0.1
+    const maxScale = 3
     newScale = Math.max(minScale, Math.min(newScale, maxScale))
 
     setScale(newScale) // Updates the scale state.
@@ -566,11 +578,11 @@ export const AppDrawerStage = memo(function AppDrawerStage({
   useEffect(() => {
     // Checks if there is a `selectedImage` and if the `dimensions` of the stage have already been calculated (greater than 0).
     if (selectedImage && dimensions.width > 0 && dimensions.height > 0) {
-      setScale(0.5) // Resets the zoom to the desired initial value (half of the image's original size).
+      setScale(0.1) // Resets the zoom to the desired initial value (half of the image's original size).
 
       // Calculates the width and height of the image **scaled** by the initial zoom (0.5).
-      const scaledImageWidth = selectedImage.image.width * 0.5
-      const scaledImageHeight = selectedImage.image.height * 0.5
+      const scaledImageWidth = selectedImage.image.width * 0.1
+      const scaledImageHeight = selectedImage.image.height * 0.1
 
       // Calculates the necessary X and Y offsets to center the scaled image within the stage.
       // (Stage width - scaled image width) / 2
@@ -594,7 +606,14 @@ export const AppDrawerStage = memo(function AppDrawerStage({
   // --- Component Rendering ---
 
   return (
-    <Grid container spacing={0.5} flexDirection={'column'} flexGrow={1} overflow={'hidden'}>
+    <AnimatedGridStyled
+      variants={slideInFromLeft}
+      container
+      spacing={0.5}
+      flexDirection={'column'}
+      flexGrow={1}
+      overflow={'hidden'}
+    >
       {/* Top section of the interface: Tool buttons and drawing area */}
       <GridStyled
         sx={{
@@ -680,7 +699,7 @@ export const AppDrawerStage = memo(function AppDrawerStage({
                   scaleY={scale} // Applies vertical zoom factor
                   x={stageX} // Applies horizontal offset (pan)
                   y={stageY} // Applies vertical offset (pan)
-                  draggable={currentTool === DrawTools.Select} // Makes the Layer draggable only if the 'Select' tool is active
+                  // draggable={currentTool === DrawTools.Select} // Makes the Layer draggable only if the 'Select' tool is active
                 >
                   {/* KonvaImage component to display the selected image */}
                   {selectedImage && (
@@ -790,6 +809,6 @@ export const AppDrawerStage = memo(function AppDrawerStage({
           onSetSelectedImage={onSetSelectedImage} // Callback to update the selected image
         />
       </GridStyled>
-    </Grid>
+    </AnimatedGridStyled>
   )
 })

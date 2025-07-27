@@ -1,11 +1,11 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router'
 import App from './App'
-import Loading from './components/layout/Loading'
+import Loading from './layout/commons/Loading'
 
-const HomePage = lazy(() => import('./pages/Home'))
-const ListPage = lazy(() => import('./pages/List'))
-const TrainingPage = lazy(() => import('./pages/Training'))
+const AnalysisPage = lazy(() => import('./pages/Analysis'))
+const TrainingHistoryPage = lazy(() => import('./pages/TrainingHistory'))
+const NewRequirementsPage = lazy(() => import('./pages/NewRequirements'))
 
 export const router = createBrowserRouter([
   {
@@ -16,24 +16,24 @@ export const router = createBrowserRouter([
         path: '',
         element: (
           <Suspense fallback={<Loading />}>
-            <HomePage />
+            <AnalysisPage />
           </Suspense>
         ),
         index: true,
       },
       {
-        path: '/list',
+        path: '/new-requirements',
         element: (
           <Suspense fallback={<Loading />}>
-            <ListPage />
+            <NewRequirementsPage />
           </Suspense>
         ),
       },
       {
-        path: '/training',
+        path: '/training-history',
         element: (
           <Suspense fallback={<Loading />}>
-            <TrainingPage />
+            <TrainingHistoryPage />
           </Suspense>
         ),
       },
