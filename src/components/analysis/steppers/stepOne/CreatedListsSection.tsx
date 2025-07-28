@@ -7,15 +7,12 @@ import { CreatedListComponent } from './CreatedListComponent'
 export const CreatedListsSection = memo(function CreatedListsSection() {
   const {
     createdLists,
-    availableRequirementsNames, // Renomeado para consistência
-    deleteList,
-    saveListEdits,
-    selectListForAppStepper, // Função de seleção
-    selectedListForAppStepper, // Lista selecionada
+    availableRequirementsNames,
+    onDeleteList: deleteList,
+    oneEditList: saveListEdits,
+    onSelectingList: selectListForAppStepper, // Função de seleção
+    selectedLists: selectedListForAppStepper, // Lista selecionada
   } = useAnalysis()
-
-  // Mapeia a seleção do contexto para a prop de isSelected no CreatedListComponent
-  const selectedListIdForStep = selectedListForAppStepper?.id || null
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -48,7 +45,7 @@ export const CreatedListsSection = memo(function CreatedListsSection() {
                   availableAllRequirementNames={availableRequirementsNames} // Do contexto
                   onDeleteList={deleteList} // Do contexto
                   onSaveList={saveListEdits} // Do contexto
-                  isSelected={selectedListIdForStep === list.id} // Do contexto/estado local mapeado
+                  isSelected={!!selectedListForAppStepper.find((el) => el.id === list.id)} // Do contexto/estado local mapeado
                   onSelect={selectListForAppStepper} // Do contexto
                 />
               </Box>

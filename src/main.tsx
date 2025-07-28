@@ -52,7 +52,7 @@ enableMocking().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       {/* ThemeProvider do Material-UI para aplicar o tema global */}
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={theme} noSsr>
         {/* Provedor de Contexto para gerenciar mudanças não salvas */}
         <UnsavedChangesProvider>
           {/* Provedor de Contexto para exibir mensagens de Snackbar */}

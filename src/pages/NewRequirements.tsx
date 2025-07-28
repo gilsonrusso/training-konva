@@ -1,12 +1,12 @@
+import { RequirementsServices } from '@/services/RequirementsService'
+import { AppDrawerPanel } from '@components/requirements/AppDrawerPanel'
+import { AppDrawerStage } from '@components/requirements/AppDrawerStage'
 import { Box, Grid, styled, type GridProps } from '@mui/material'
 import saveAs from 'file-saver'
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { AppDrawerPanel } from '../components/requirements/AppDrawerPanel'
-import { AppDrawerStage } from '../components/requirements/AppDrawerStage'
 import { RANDOM_RGBA_COLORS, RANDOM_SOLID_COLORS } from '../constants/rgbaOptions'
 import { useSnackbar } from '../contexts/SnackBarContext'
-import { YoloService } from '../services/yoloUploadService'
 import type { ClassDefinition, ImageWithRects } from '../types/Shapes'
 
 const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
@@ -257,10 +257,10 @@ const NewRequirementsPage = () => {
       formData.append('list_names', currentTrainingListNames)
 
       // 4. Upload the ZIP file to the upload service
-      const uploadResponse = await YoloService.startYoloAnalysis(formData)
+      const uploadResponse = await RequirementsServices.startNewTraining(formData)
 
       showSnackbar(
-        `Training started! Upload completed. Analysis ID: ${uploadResponse.id}`,
+        `Training started! Upload completed. Analysis ID: ${uploadResponse.message}`,
         'success'
       )
       console.log('Upload response for training:', uploadResponse)

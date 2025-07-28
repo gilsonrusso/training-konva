@@ -1,4 +1,3 @@
-// src/mocks/handlers.ts
 import { http, HttpResponse } from 'msw'
 
 // -----------------------------------------------------------
@@ -20,34 +19,22 @@ const availableRequirementsNames = [
 ]
 
 // Dados para as listas criadas (simulando FetchedCreatedList)
-interface MockCreatedListItem {
-  id_: string // ID do item dentro da lista
-  name: string // Nome do requisito
-}
-
 interface MockFetchedCreatedList {
   id: string // ID da lista (gerado pelo mock server)
   name: string
-  requirements: MockCreatedListItem[]
+  requirements: string[]
 }
 
 let createdLists: MockFetchedCreatedList[] = [
   {
     id: 'list-mock-1',
     name: 'Lista Inicial de Projeto',
-    requirements: [
-      { id_: 'req-mock-1-1', name: 'DesignInterface' },
-      { id_: 'req-mock-1-2', name: 'LogicaNegocios' },
-    ],
+    requirements: ['DesignInterface', 'LogicaNegocios'],
   },
   {
     id: 'list-mock-2',
     name: 'Lista de Segurança e Performance',
-    requirements: [
-      { id_: 'req-mock-2-1', name: 'Seguranca' },
-      { id_: 'req-mock-2-2', name: 'Desempenho' },
-      { id_: 'req-mock-2-3', name: 'BancoDeDados' },
-    ],
+    requirements: ['Seguranca', 'Desempenho', 'BancoDeDados'],
   },
 ]
 
@@ -63,11 +50,11 @@ export const handlers = [
   http.get('/api/requirements', () => {
     console.log('MSW: GET /api/requirements ->', availableRequirementsNames.length, 'requisitos.')
     return HttpResponse.json(availableRequirementsNames, { status: 200 })
-  }), // -----------------------------------------------------------
+  }),
+  // -----------------------------------------------------------
   // Endpoints para Listas Criadas (CRUD)
   // -----------------------------------------------------------
   // GET all lists: /api/lists
-
   http.get('/api/lists', () => {
     console.log('MSW: GET /api/lists ->', createdLists.length, 'listas.')
     return HttpResponse.json(createdLists, { status: 200 })
@@ -137,70 +124,10 @@ export const handlers = [
     }
     console.log(`MSW: DELETE /api/lists/${id} -> Lista excluída.`)
     return new HttpResponse(null, { status: 204 }) // 204 No Content
-  }), // -----------------------------------------------------------
-  // NOVO ENDPOINT: Simulação de Início de Análise YOLO para Treinamento
-  // POST /api/yolo/upload-and-analyze
-  // Este endpoint é chamado pelo `YoloService.startYoloAnalysis` para iniciar o processo.
-  // -----------------------------------------------------------
-
-  http.post('/api/yolo/upload-and-analyze', async ({ request }) => {
-    const formData = await request.formData() // Acessa os dados do FormData
-
-    const filesReceived: { name: string; size: number; type: string }[] = []
-    let listNames: string[] = []
-    let requirementsData: unknown[] = [] // Itera sobre os campos do FormData para coletar informações
-
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        filesReceived.push({
-          name: value.name,
-          size: value.size,
-          type: value.type,
-        })
-        console.log(
-          `MSW: Arquivo recebido - Chave: ${key}, Nome: ${value.name}, Tamanho: ${value.size} bytes`
-        )
-      } else if (key === 'list_names') {
-        // Supondo que 'list_names' pode vir como uma string JSON se for um array ou uma string simples
-        try {
-          listNames = JSON.parse(String(value))
-          console.log(`MSW: list_names recebido (JSON):`, listNames)
-        } catch (e: unknown) {
-          listNames = [String(value)] // Se não for JSON, trate como string simples
-          console.log(`MSW: list_names recebido (string):`, listNames, e)
-        }
-      } else if (key === 'requirements') {
-        try {
-          requirementsData = JSON.parse(String(value))
-          console.log(`MSW: Requisitos recebidos (JSON):`, requirementsData)
-        } catch (e) {
-          console.warn('MSW: Erro ao parsear "requirements" do FormData:', e)
-        }
-      }
-    }
-
-    console.log(`MSW: POST /api/yolo/upload-and-analyze -> Recebido para análise.`)
-    console.log(`MSW: Total de arquivos anexados: ${filesReceived.length}`) // Simula um atraso de processamento antes de retornar o status inicial
-
-    await new Promise((resolve) => setTimeout(resolve, 500)) // Pequeno atraso para simular rede
-    // Gera um ID de análise único
-
-    const analysisId = `yolo-analysis-${Date.now()}-${Math.random().toString(36).substring(2, 9)}` // Retorna uma resposta inicial de "análise em andamento"
-
-    return HttpResponse.json(
-      {
-        id: analysisId,
-        status: 'analyzing', // Ou 'pending' se preferir essa string
-        date_initialized: new Date().toISOString(),
-        message: `Análise YOLO iniciada com sucesso. Processando ${filesReceived.length} arquivos.`,
-      },
-      { status: 200 } // Status HTTP 200 OK para aceitação do pedido
-    )
-  }), // -----------------------------------------------------------
-  // Endpoint para Análise de Imagens (Simulação YOLO) - O SEU ORIGINAL
+  }),
+  // Endpoint para Análise de Imagens (Simulação YOLO) - SEU ORIGINAL, AGORA COM analysisId GLOBAL
   // POST /api/analyze-images
   // -----------------------------------------------------------
-
   http.post('/api/analyze-images', async ({ request }) => {
     const formData = await request.formData() // Acessa os dados do FormData
 
@@ -215,7 +142,8 @@ export const handlers = [
           name: value.name,
           size: value.size,
           type: value.type,
-        }) // Para simulação, geramos uma URL de placeholder ou uma URL de objeto fake
+        })
+        // Para simulação, geramos uma URL de placeholder ou uma URL de objeto fake
         imagePreviewUrls.push({
           id: `yolo-img-${uploadedFilesInfo.length}-${Date.now()}`,
           src: `https://via.placeholder.com/150/${Math.floor(Math.random() * 16777215).toString(16)}/FFFFFF?text=${value.name.substring(0, Math.min(value.name.length, 8))}`,
@@ -232,22 +160,27 @@ export const handlers = [
       }
     }
 
-    console.log(`MSW: POST /api/analyze-images -> Recebidas ${uploadedFilesInfo.length} imagens.`)
+    console.log(
+      `MSW: POST /api/analyze-images -> Recebidas ${uploadedFilesInfo.length} imagens para análise detalhada.`
+    )
     console.log(
       `MSW: Dados adicionais - listId: ${listIdFromForm}, requisitos:`,
       requirementsFromForm
-    ) // Simula um atraso de processamento para a análise YOLO
-
+    )
     await new Promise((resolve) => setTimeout(resolve, 3000)) // 3 segundos de atraso
-    // Constrói o relatório simulado de análise YOLO
 
+    // GERAR O ID DE ANÁLISE GLOBAL AQUI para o serviço de análise
+    const globalAnalysisId = `analysis-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+
+    // Constrói o relatório simulado de análise YOLO
     const analysisReport = {
       success: true,
       message: 'Análise YOLO concluída com sucesso (simulada pelo MSW)!',
+      id: globalAnalysisId, // <--- ID DE ANÁLISE GLOBAL ADICIONADO AQUI
       data: {
         overallSummary: `Foram processadas ${uploadedFilesInfo.length} imagens para a lista ${listIdFromForm || 'não especificada'}.`,
         imageReports: imagePreviewUrls.map((img) => ({
-          id: img.id,
+          id: img.id, // ID da imagem individual
           imageSrc: img.src,
           title: `Análise de ${img.name}`,
           summary: `Detalhes: Detectados objetos A (${(Math.random() * 0.2 + 0.7).toFixed(2)}), B (${(Math.random() * 0.2 + 0.6).toFixed(2)}) e C (${(Math.random() * 0.2 + 0.5).toFixed(2)}).`,
@@ -261,5 +194,58 @@ export const handlers = [
     }
 
     return HttpResponse.json(analysisReport, { status: 200 })
+  }),
+  // -----------------------------------------------------------
+  // NOVO ENDPOINT: Simulação de Início de Análise YOLO para TREINAMENTO
+  // POST /api/yolo/upload-and-analyze
+  // Este endpoint é chamado para iniciar o processo de treinamento e retorna 201 Created sem ID.
+  // -----------------------------------------------------------
+  http.post('/api/yolo/upload-and-analyze', async ({ request }) => {
+    const formData = await request.formData() // Acessa os dados do FormData
+
+    const filesReceived: { name: string; size: number; type: string }[] = []
+    let listNames: string[] = []
+    let requirementsData: unknown[] = []
+
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        filesReceived.push({
+          name: value.name,
+          size: value.size,
+          type: value.type,
+        })
+        console.log(
+          `MSW: Arquivo recebido para treinamento - Chave: ${key}, Nome: ${value.name}, Tamanho: ${value.size} bytes`
+        )
+      } else if (key === 'list_names') {
+        try {
+          listNames = JSON.parse(String(value))
+          console.log(`MSW: list_names para treinamento recebido (JSON):`, listNames)
+        } catch (e: unknown) {
+          listNames = [String(value)]
+          console.log(`MSW: list_names para treinamento recebido (string):`, listNames, e)
+        }
+      } else if (key === 'requirements') {
+        try {
+          requirementsData = JSON.parse(String(value))
+          console.log(`MSW: Requisitos para treinamento recebidos (JSON):`, requirementsData)
+        } catch (e) {
+          console.warn('MSW: Erro ao parsear "requirements" do FormData para treinamento:', e)
+        }
+      }
+    }
+
+    console.log(`MSW: POST /api/yolo/upload-and-analyze -> Treinamento iniciado.`)
+    console.log(`MSW: Total de arquivos anexados para treinamento: ${filesReceived.length}`)
+
+    await new Promise((resolve) => setTimeout(resolve, 500)) // Pequeno atraso
+
+    // Retorna um status 201 Created com uma mensagem simples, SEM ID
+    return HttpResponse.json(
+      {
+        message: `Treinamento iniciado com sucesso. Processando ${filesReceived.length} arquivos.`,
+      },
+      { status: 201 } // Status HTTP 201 Created
+    )
   }),
 ]

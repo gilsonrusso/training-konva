@@ -1,3 +1,4 @@
+import type { RequirementItem, createdListLocalState } from '@/types/analysis'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -11,30 +12,18 @@ import {
   Divider,
   FormControlLabel,
   IconButton,
+  ListItemButton,
+  ListItemText,
   TextField,
 } from '@mui/material'
 import List from '@mui/material/List'
-import ListItemButton from '@mui/material/ListItemButton'
-import ListItemText from '@mui/material/ListItemText'
 import { memo, useEffect, useState } from 'react'
 
-interface CreatedListItem {
-  id_: string // ID do item dentro da lista criada (o '_id' do backend)
-  name: string // Nome do item (ex: 'DesignInterface')
-  // ... outras propriedades que possam vir no '...rest'
-}
-
-interface FetchedCreatedList {
-  id: string // ID da lista (o ID gerado pelo backend)
-  name: string
-  requirements: CreatedListItem[] // A lista de itens com id_ e name
-}
-
 interface CreatedListComponentProps {
-  list: FetchedCreatedList
+  list: createdListLocalState
   availableAllRequirementNames: string[] // Vem do CreatedListsSection (que pega do context)
   onDeleteList: (listId: string) => void // Vem do CreatedListsSection (que pega do context)
-  onSaveList: (listToSave: FetchedCreatedList) => void // Vem do CreatedListsSection (que pega do context)
+  onSaveList: (listToSave: createdListLocalState) => void // Vem do CreatedListsSection (que pega do context)
   isSelected: boolean
   onSelect: (listId: string) => void // Vem do CreatedListsSection (que pega do context)
 }
@@ -48,7 +37,7 @@ export const CreatedListComponent = memo(function CreatedListComponent({
 }: CreatedListComponentProps) {
   const [isEditingName, setIsEditingName] = useState(false)
   const [currentListName, setCurrentListName] = useState(list.name)
-  const [currentRequirements, setCurrentRequirements] = useState<CreatedListItem[]>(
+  const [currentRequirements, setCurrentRequirements] = useState<RequirementItem[]>(
     list.requirements
   )
   const [selectedNewRequirementName, setSelectedNewRequirementName] = useState<string | null>(null)
@@ -90,7 +79,7 @@ export const CreatedListComponent = memo(function CreatedListComponent({
       )
 
       if (!isAlreadyAdded) {
-        const newRequirement: CreatedListItem = {
+        const newRequirement: RequirementItem = {
           id_: `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           name: selectedNewRequirementName,
         }
@@ -172,14 +161,14 @@ export const CreatedListComponent = memo(function CreatedListComponent({
       />
       <Divider />
       <List dense sx={{ maxHeight: '200px', overflowY: 'auto', overflowX: 'hidden', flexGrow: 1 }}>
-        {currentRequirements.map((req) => (
-          <ListItemButton key={req.id_} sx={{ py: 0.5 }}>
+        {currentRequirements.map(({ id_, name }) => (
+          <ListItemButton key={id_} sx={{ py: 0.5 }}>
             <ListItemText
-              primary={req.name}
+              primary={name}
               sx={{ '& .MuiListItemText-primary': { fontSize: '0.8rem' } }}
             />
             <Box sx={{ ml: 'auto' }}>
-              <IconButton size="small" onClick={handleDeleteRequirement(req.id_)}>
+              <IconButton size="small" onClick={handleDeleteRequirement(id_)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>

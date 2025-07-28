@@ -30,10 +30,9 @@ export const AppStepper = () => {
   const { markAsClean } = useUnsavedChanges()
   // Use o hook para acessar o contexto de requisitos
   const {
-    selectedListForAppStepper,
-    selectListForAppStepper,
-    getAvailableRequirementsNames,
-    getListAvailableRequirementsList,
+    selectedLists: selectedListForAppStepper,
+    onGetAvailableRequirements: getAvailableRequirementsNames,
+    onGetLists: getListAvailableRequirementsList,
   } = useAnalysis()
 
   const theme = useTheme()
@@ -43,14 +42,10 @@ export const AppStepper = () => {
       // Se estiver no passo 2 (index 1), tentar analisar
       if (appStepTwoRef.current) {
         try {
-          const result = await appStepTwoRef.current.analyzeImages()
-          if (result.success) {
-            setAnalysisReportData(result.data) // Armazena os dados do relatório
-            setActiveStep((prevActiveStep) => prevActiveStep + 1) // Avança para o passo de relatório
-            showSnackbar('Análise concluída com sucesso!', 'success')
-          } else {
-            showSnackbar(`Erro na análise: ${result.message}`, 'error')
-          }
+          await appStepTwoRef.current.analyzeImages()
+          // setAnalysisReportData(result.data as any)
+          setActiveStep((prevActiveStep) => prevActiveStep + 1)
+          showSnackbar('Análise concluída com sucesso!', 'success')
         } catch (error: unknown) {
           console.error('Error starting training or uploading:', error)
           if (error instanceof Error) {
@@ -74,7 +69,6 @@ export const AppStepper = () => {
   const handleReset = () => {
     setActiveStep(0)
     // Reinicie os estados do stepper
-    selectListForAppStepper(null) // Deseleciona a lista no contexto
     setStepTwoHasImages(false)
     setAnalysisReportData(null)
     markAsClean() // Marcar como limpo
@@ -87,7 +81,8 @@ export const AppStepper = () => {
   useEffect(() => {
     getAvailableRequirementsNames()
     getListAvailableRequirementsList()
-  })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <Box
@@ -117,11 +112,7 @@ export const AppStepper = () => {
         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {activeStep === 0 && <AppStepOne />}
           {activeStep === 1 && (
-            <AppStepTwo
-              selectedList={selectedListForAppStepper}
-              ref={appStepTwoRef}
-              onHasImagesChange={handleStepTwoHasImagesChange}
-            />
+            <AppStepTwo ref={appStepTwoRef} onHasImagesChange={handleStepTwoHasImagesChange} />
           )}
           {activeStep === 2 && ( // Renderiza o AppReportStep no Passo 3
             <AppReportStep reportData={analysisReportData} />
@@ -145,7 +136,7 @@ export const AppStepper = () => {
               onClick={handleNext}
               disabled={
                 (activeStep === 1 && !stepTwoHasImages) ||
-                (activeStep === 0 && !selectedListForAppStepper)
+                (activeStep === 0 && !selectedListForAppStepper.length)
               }
             >
               {activeStep === 1 ? 'Analisar' : 'Próximo'}

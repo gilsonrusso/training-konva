@@ -6,21 +6,13 @@ import { intersection, not, union } from '../../../../utils/commons'
 import { CreatedListsSection } from './CreatedListsSection'
 import { PrimarySelectionList } from './PrimarySelectionList'
 
-// type AvailableRequirement = string
-
-// interface CreateListPayload {
-//   name: string
-//   requirements: string[]
-// }
-
 export const AppStepOne = () => {
   const [checkedRequirementNames, setCheckedRequirementNames] = useState<readonly string[]>([])
   const [newListName, setNewListName] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const { availableRequirementsNames, createdLists, createNewList } = useAnalysis()
+  const { availableRequirementsNames, createdLists, onCreateList: createNewList } = useAnalysis()
 
-  // Funções que agora interagem com o contexto
   const handleCreateNewList = useCallback(() => {
     if (newListName.trim() === '') {
       setErrorMessage('O nome da lista não pode ser vazio.')
@@ -32,7 +24,7 @@ export const AppStepOne = () => {
     }
     setErrorMessage(null)
 
-    createNewList(newListName, Array.from(checkedRequirementNames)) // Usa a função do contexto
+    createNewList(newListName, Array.from(checkedRequirementNames))
     setNewListName('')
     setCheckedRequirementNames([])
   }, [newListName, checkedRequirementNames, createNewList, createdLists])

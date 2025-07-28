@@ -14,27 +14,27 @@ import {
   Typography,
 } from '@mui/material'
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
-import type { FetchedCreatedList } from '../../../../types/requirements'
 
+import { useAnalysis } from '@/contexts/AnalysisContext'
+import { AnalysisService } from '@/services/AnalysisServices'
+import { AppDragAndDrop } from '@components/commons/DragAndDrop'
+import { useUnsavedChanges } from '@contexts/UnsavedChangesContext'
 import JSZip from 'jszip'
-import { useUnsavedChanges } from '../../../../contexts/UnsavedChangesContext'
-import { AppDragAndDrop } from '../../../commons/DragAndDrop' // Verifique se o caminho está correto
 
-interface AnalysisResult {
-  success: boolean
-  message: string
-  data: unknown
-}
+// interface AnalysisResult {
+//   success: boolean
+//   message: string
+//   data: unknown
+// }
 export interface AppStepTwoHandles {
-  analyzeImages: () => Promise<AnalysisResult> // Função para analisar e enviar
+  analyzeImages: () => Promise<void>
 }
 interface AppStepTwoProps {
-  selectedList?: FetchedCreatedList | null
   onHasImagesChange: (hasImages: boolean) => void
 }
 
 export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(function AppStepTwo(
-  { selectedList, onHasImagesChange },
+  { onHasImagesChange },
   ref
 ) {
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -42,6 +42,7 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
 
   const { markAsDirty, markAsClean } = useUnsavedChanges()
+  const { selectedLists, setCurrentAnalysisId } = useAnalysis()
 
   useImperativeHandle(ref, () => ({
     analyzeImages: handleAnalyzeAndSend,
@@ -56,72 +57,30 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
 
     try {
       const zip = new JSZip()
-      const folder = zip.folder('images') // Crie uma pasta dentro do zip para as imagens
 
       for (const file of imageFiles) {
-        folder?.file(file.name, file) // Adicione cada arquivo à pasta
+        const imageFileName = file.name.split('/').pop()?.split('.')[0]
+        const imageFileExt = file.name.split('/').pop()?.split('.')[1]
+        zip.file(`${imageFileName}.${imageFileExt}`, file)
       }
 
       // Gere o ZIP como Blob e depois converta para Base64
       const zipBlob = await zip.generateAsync({ type: 'blob' })
-      // const zipBase64 = await new Promise<string>((resolve, reject) => {
-      //   const reader = new FileReader()
-      //   reader.onloadend = () => {
-      //     if (typeof reader.result === 'string') {
-      //       resolve(reader.result.split(',')[1]) // Pega apenas a parte Base64 (depois de "data:application/zip;base64,")
-      //     } else {
-      //       reject(new Error('Falha ao ler o arquivo ZIP como Base64.'))
-      //     }
-      //   }
-      //   reader.onerror = reject
-      //   reader.readAsDataURL(zipBlob)
-      // })
 
-      // Prepare a lista selecionada (se existir) como array de strings
-      const listData = selectedList ? [selectedList.id] : [] // Exemplo: enviando apenas o ID
+      // Prepare a lista selecionada como strings
+      const listData = selectedLists.map((list) => list.name).join(',')
 
       const formData = new FormData()
       formData.append('arquivos', zipBlob, 'images.zip') // 'arquivos' é o nome do campo para o ZIP
       formData.append('list', JSON.stringify(listData)) // 'list' é o nome do campo para a lista, como JSON string
 
-      // Simulando o envio para uma API
-      console.log('Enviando dados para a API...')
-      console.log('FormData (arquivos.name):', (formData.get('arquivos') as File).name)
-      console.log('FormData (list):', formData.get('list'))
+      const response = await AnalysisService.performImageAnalysis(formData)
 
-      // Substitua esta parte pela sua chamada real à API
-      // Exemplo com fetch:
-      // const response = await fetch('/api/analyze', {
-      //   method: 'POST',
-      //   body: formData,
-      // });
-      // if (!response.ok) {
-      //   throw new Error(`Erro na API: ${response.statusText}`);
-      // }
-      // const result = await response.json();
-      // console.log('Resultado da API:', result);
-      // return result;
+      console.log('::::respnse', { response })
 
-      // Simulação de sucesso
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      setCurrentAnalysisId(response.id)
+
       console.log('Análise concluída com sucesso (simulado)!')
-
-      const mockReportData = imageFiles.map((file, index) => ({
-        id: `img-${file.name}-${index}`, // ID único para cada imagem
-        imageSrc: URL.createObjectURL(file), // Cria uma URL temporária para a imagem
-        title: `Relatório da Imagem: ${file.name}`,
-        summary: `Esta imagem foi analisada com sucesso. Detecção de objetos: ${Math.floor(Math.random() * 5) + 1} objetos encontrados. Qualidade: ${Math.random() > 0.5 ? 'Boa' : 'Regular'}.`,
-      }))
-
-      return {
-        success: true,
-        message: 'Análise simulada concluída.',
-        data: {
-          overallSummary:
-            'Resumo geral da análise de todas as imagens carregadas e processadas, indicando os resultados principais e quaisquer anomalias.',
-          imageReports: mockReportData,
-        },
-      }
     } catch (error) {
       console.error('Erro ao analisar e enviar imagens:', error)
       throw error
@@ -194,9 +153,9 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
       </Typography>
 
       {/* Adicionando a exibição do selectedList */}
-      {selectedList && (
+      {selectedLists.length > 0 && (
         <Typography variant="subtitle1" color="textSecondary" sx={{ mb: 2 }}>
-          Lista Selecionada: {selectedList.name || selectedList.id}
+          Lista Selecionada: {selectedLists.map((item) => item.name).join(', ')}
         </Typography>
       )}
 
