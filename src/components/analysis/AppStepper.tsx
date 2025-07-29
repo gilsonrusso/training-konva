@@ -1,10 +1,10 @@
-import { styled, useTheme } from '@mui/material'
+import { useTheme } from '@mui/material'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
-import Stepper, { type StepperProps } from '@mui/material/Stepper'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import Stepper from '@mui/material/Stepper'
+import { useCallback, useRef, useState } from 'react'
 import { useAnalysis } from '../../contexts/AnalysisContext'
 import { useSnackbar } from '../../contexts/SnackBarContext'
 import { useUnsavedChanges } from '../../contexts/UnsavedChangesContext'
@@ -13,10 +13,6 @@ import { AppReportStep, type AnalysisReportData } from './steppers/stepThree/App
 import { AppStepTwo, type AppStepTwoHandles } from './steppers/stepTwo/AppStepTwo'
 
 const steps = ['Select or Create a list', 'Upload Images', 'Report']
-
-export const StepperStyled = styled(Stepper)<StepperProps>(() => ({
-  // backgroundColor: theme.palette.background.paper,
-}))
 
 export const AppStepper = () => {
   const [activeStep, setActiveStep] = useState(0)
@@ -29,11 +25,7 @@ export const AppStepper = () => {
   const { showSnackbar } = useSnackbar()
   const { markAsClean } = useUnsavedChanges()
   // Use o hook para acessar o contexto de requisitos
-  const {
-    selectedLists: selectedListForAppStepper,
-    onGetAvailableRequirements: getAvailableRequirementsNames,
-    onGetLists: getListAvailableRequirementsList,
-  } = useAnalysis()
+  const { selectedLists } = useAnalysis()
 
   const theme = useTheme()
 
@@ -78,12 +70,6 @@ export const AppStepper = () => {
     setStepTwoHasImages(hasImages)
   }, [])
 
-  useEffect(() => {
-    getAvailableRequirementsNames()
-    getListAvailableRequirementsList()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <Box
       sx={{
@@ -94,7 +80,7 @@ export const AppStepper = () => {
         overflowY: 'hidden',
       }}
     >
-      <StepperStyled activeStep={activeStep}>
+      <Stepper activeStep={activeStep}>
         {steps.map((label) => {
           const stepProps: { completed?: boolean } = {}
           const labelProps: {
@@ -106,7 +92,7 @@ export const AppStepper = () => {
             </Step>
           )
         })}
-      </StepperStyled>
+      </Stepper>
 
       <>
         <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -136,7 +122,7 @@ export const AppStepper = () => {
               onClick={handleNext}
               disabled={
                 (activeStep === 1 && !stepTwoHasImages) ||
-                (activeStep === 0 && !selectedListForAppStepper.length)
+                (activeStep === 0 && !selectedLists.length)
               }
             >
               {activeStep === 1 ? 'Analisar' : 'Próximo'}

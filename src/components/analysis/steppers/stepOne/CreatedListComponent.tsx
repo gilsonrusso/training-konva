@@ -1,4 +1,4 @@
-import type { RequirementItem, createdListLocalState } from '@/types/analysis'
+import type { RequirementItem, createdListLocalState } from '@/types/analysis.types'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
