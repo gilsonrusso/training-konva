@@ -36,9 +36,9 @@ export const theme = createTheme({
           main: '#616161',
         },
         primary: {
-          main: blue[200], // Um azul claro e suave para brilhar em fundos escuros
+          main: blue[500], // Um azul claro e suave para brilhar em fundos escuros
           light: blue[100],
-          dark: blue[500],
+          dark: blue[800],
           contrastText: '#000', // Texto preto sobre o azul primário claro (para contraste)
         },
         secondary: {

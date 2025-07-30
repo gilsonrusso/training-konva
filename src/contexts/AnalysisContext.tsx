@@ -1,158 +1,162 @@
-import { useFetch } from '@/hooks/useFetch'
-import { useMutation } from '@/hooks/useMutation'
 import { AnalysisService } from '@/services/AnalysisServices'
 import { RequirementsServices } from '@/services/RequirementsService'
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { AnalysisListUseState } from '../types/analysis.types' // Ajuste o caminho conforme sua estrutura
-import { useSnackbar } from './SnackBarContext' // Assumindo que você já tem um SnackbarContext
-
-// -----------------------------------------------------------
-// 1. Tipos para o Contexto
-// -----------------------------------------------------------
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import type { AnalysisListResponse, AnalysisListUseState } from '../types/analysis.types'
+import { useSnackbar } from './SnackBarContext'
 
 interface AnalysisContextType {
-  currentAnalysisId: string | null // para usar para busca o relatorio
+  currentAnalysisId: string | null
   availableRequirementsNames: string[]
   createdLists: AnalysisListUseState[]
   selectedLists: AnalysisListUseState[]
 
-  // Estados de Carregamento para a UI reagir
   isLoadingRequirements: boolean
   isLoadingLists: boolean
   isCreatingList: boolean
   isEditingList: boolean
   isDeletingList: boolean
-  // Funções que serão expostas pelo contexto
-  // Funções para manipulação de requisitos na PrimarySelectionList (se necessário globalmente, ou mantidas no AppStepOne)
-  // checkedRequirementNames: string[]; // Se você decidir mover esse estado para cá
-  // toggleRequirement: (value: string) => void;
-  // toggleAllRequirements: (itemsToToggle: readonly string[]) => void;
-  setCurrentAnalysisId: (analysisId: string | null) => void // para usar no step 02 depois de submeter para analise
+
+  setCurrentAnalysisId: (analysisId: string | null) => void
   onCreateList: (name: string, requirementNames: string[]) => Promise<void>
   onDeleteList: (listId: string) => Promise<void>
   onEditList: (listToSave: AnalysisListUseState) => Promise<void>
-  onSelectingList: (listId: string) => void // Para uso no AppStepper
+  onSelectingList: (listId: string) => void
   onGetLists: () => void
 }
 
-// -----------------------------------------------------------
-// 2. Criação do Contexto
-// -----------------------------------------------------------
-
 const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined)
-
-// -----------------------------------------------------------
-// 3. Provedor do Contexto (RequirementProvider)
-// -----------------------------------------------------------
 
 interface RequirementProviderProps {
   children: React.ReactNode
 }
 
 export const AnalysisProvider = ({ children }: RequirementProviderProps) => {
-  // Estados que são puramente da UI e não vêm de uma API
-  // const [createdLists, setCreatedLists] = useState<AnalysisListUseState[]>([])
+  const queryClient = useQueryClient()
+
   const [selectedLists, setSelectedLists] = useState<AnalysisListUseState[]>([])
   const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null)
 
   const { showSnackbar } = useSnackbar()
 
-  // 1. Crie uma versão estável da função para buscar as listas
-  const getListsApiCall = useCallback((signal: AbortSignal) => {
-    return AnalysisService.getLists(signal)
-  }, []) // O array de dependências está vazio porque AnalysisService.getLists não muda
+  // --- BUSCA DE DADOS COM useQuery ---
 
-  // 2. Crie uma versão estável da função para buscar os requisitos
-  const getRequirementsApiCall = useCallback((signal: AbortSignal) => {
-    return RequirementsServices.getAvailableRequirements(signal)
-  }, []) // Array de dependências também vazio
+  const { data: availableRequirementsData, isPending: isLoadingRequirements } = useQuery<
+    string[],
+    Error
+  >({
+    queryKey: ['requirements'],
+    queryFn: ({ signal }) => RequirementsServices.getAvailableRequirements(signal),
+  })
 
-  // 1. Buscando Requisitos Disponíveis com useFetch
-  const { data: availableRequirementsData, loading: isLoadingRequirements } = useFetch(
-    getRequirementsApiCall // Passe a função memorizada
-  )
+  // O 'data' de useQuery pode ser undefined durante o loading, então use '?? []'
   const availableRequirementsNames = availableRequirementsData ?? []
 
-  // 2. Buscando as Listas Criadas com useFetch
-  const {
-    data: listsData,
-    loading: isLoadingLists,
-    refetch: onGetLists,
-  } = useFetch(
-    getListsApiCall // Passe a função memorizada
-  )
+  const { data: listsData, isPending: isLoadingLists } = useQuery<AnalysisListResponse[], Error>({
+    queryKey: ['lists'],
+    queryFn: ({ signal }) => AnalysisService.getLists(signal),
+  })
 
-  // Usamos useMemo para transformar os dados da API apenas quando eles mudam
+  // Transforme os dados brutos da lista para o formato de estado da UI (`AnalysisListUseState[]`)
   const createdLists = useMemo(() => {
+    // 'listsData' é o array bruto de `AnalysisListResponse[]` retornado pelo TanStack Query.
+    // Ele pode ser 'undefined' enquanto carregando, em erro, ou se a requisição ainda não ocorreu.
     if (!listsData) return []
-    return listsData.map(({ id, name, requirements }) => ({
-      id,
-      name,
-      requirements: requirements.map((el) => ({
-        id_: `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+
+    return listsData.map((item) => ({
+      id: item.id,
+      name: item.name,
+      requirements: item.requirements.map((el) => ({
+        id_: `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, // ID único para a UI
         name: el,
       })),
     }))
   }, [listsData])
 
-  // --- SUBSTITUIÇÃO DA LÓGICA DE MUTAÇÃO ---
+  // --- MUTAÇÕES COM useMutation ---
 
-  // 3. Criando uma nova lista com useMutation
-  const { mutate: createListMutation, loading: isCreatingList } = useMutation(
-    AnalysisService.createList
-  )
-  // 4. Editando uma lista com useMutation
-  const { mutate: editListMutation, loading: isEditingList } = useMutation(AnalysisService.editList)
+  // 3. Criando uma nova lista
+  const { mutateAsync: createListMutation, isPending: isCreatingList } = useMutation<
+    AnalysisListResponse, // Tipo de retorno da mutação
+    Error, // Tipo de erro
+    { name: string; requirements: string[] } // Tipo do payload de entrada
+  >({
+    mutationFn: AnalysisService.createList, // <--- Sua função de serviço para criar lista
+    onSuccess: () => {
+      showSnackbar('Lista criada com sucesso!', 'success')
+      // Invalide o cache da query 'lists' para forçar uma re-busca
+      // Isso garantirá que a lista seja atualizada na UI.
+      queryClient.invalidateQueries({ queryKey: ['lists'] })
+    },
+    onError: (error: unknown) => {
+      showSnackbar('Erro ao criar a lista.', 'error')
+      console.error('Erro ao criar lista:', error)
+    },
+  })
 
-  // 5. Deletando uma lista com useMutation
-  // Assumindo que você tenha `AnalysisService.deleteList(id)` no seu serviço
-  const { mutate: deleteListMutation, loading: isDeletingList } = useMutation(
-    AnalysisService.deleteList
-  )
+  // 4. Editando uma lista
+  const { mutateAsync: editListMutation, isPending: isEditingList } = useMutation<
+    AnalysisListResponse, // Tipo de retorno
+    Error,
+    { id: string; name: string; requirements: string[] } // Tipo do payload
+  >({
+    mutationFn: AnalysisService.editList, // <--- Sua função de serviço para editar lista
+    onSuccess: () => {
+      showSnackbar('Lista editada com sucesso!', 'success')
+      queryClient.invalidateQueries({ queryKey: ['lists'] }) // Invalida o cache
+    },
+    onError: (error: unknown) => {
+      showSnackbar('Erro ao editar a lista.', 'error')
+      console.error('Erro ao editar lista:', error)
+    },
+  })
+
+  // 5. Deletando uma lista
+  const { mutateAsync: deleteListMutation, isPending: isDeletingList } = useMutation<
+    void, // Tipo de retorno (void, pois delete geralmente não retorna corpo)
+    Error,
+    { id: string } // Tipo do payload
+  >({
+    mutationFn: AnalysisService.deleteList, // <--- Sua função de serviço para deletar lista
+    onSuccess: (_, variables) => {
+      // Opcional: atualização otimista (removendo da lista de selecionados localmente)
+      setSelectedLists((prev) => prev.filter((item) => item.id !== variables.id))
+      showSnackbar('Lista excluída com sucesso!', 'info')
+      queryClient.invalidateQueries({ queryKey: ['lists'] }) // Invalida o cache
+    },
+    onError: (error: unknown) => {
+      showSnackbar('Erro ao excluir a lista.', 'error')
+      console.error('Erro ao excluir lista:', error)
+    },
+  })
 
   // --- FUNÇÕES EXPOSTAS PELO CONTEXTO ---
 
+  // Agora as funções chamam `mutateAsync` e não precisam mais de try/catch aqui,
+  // pois o tratamento de erro está no `useMutation`
   const onCreateList = async (name: string, requirementNames: string[]) => {
-    try {
-      await createListMutation({ name, requirements: requirementNames })
-      showSnackbar('Lista criada com sucesso!', 'success')
-      onGetLists() // Re-busca a lista de listas para atualizar a UI
-    } catch (error: unknown) {
-      showSnackbar('Erro ao criar a lista.', 'error')
-      console.error('Erro ao criar lista:', error)
-    }
+    await createListMutation({ name, requirements: requirementNames })
   }
 
   const onEditList = async (listToSave: AnalysisListUseState) => {
-    try {
-      const payload = {
-        id: listToSave.id,
-        name: listToSave.name,
-        requirements: listToSave.requirements.map((item) => item.name),
-      }
-      await editListMutation(payload)
-      showSnackbar('Lista editada com sucesso!', 'success')
-      onGetLists() // Re-busca para garantir a consistência
-    } catch (error: unknown) {
-      showSnackbar('Erro ao editar a lista.', 'error')
-      console.error('Erro ao editar lista:', error)
+    const payload = {
+      id: listToSave.id,
+      name: listToSave.name,
+      requirements: listToSave.requirements.map((item) => item.name),
     }
+    await editListMutation(payload)
   }
 
   const onDeleteList = async (listId: string) => {
-    try {
-      await deleteListMutation({ id: listId })
-      // Remove da lista de selecionados localmente (otimização)
-      setSelectedLists((prev) => prev.filter((item) => item.id !== listId))
-      showSnackbar('Lista excluída com sucesso!', 'info')
-      onGetLists() // Re-busca para garantir a consistência
-    } catch (error: unknown) {
-      showSnackbar('Erro ao excluir a lista.', 'error')
-      console.error('Erro ao excluir lista:', error)
-    }
+    await deleteListMutation({ id: listId })
   }
 
-  // Função que não envolve API (lógica de UI)
+  // Função para re-buscar as listas (apenas invoca a invalidação do cache)
+  const onGetLists = useCallback(() => {
+    // Força o TanStack Query a marcar a query 'lists' como stale e re-buscar
+    queryClient.invalidateQueries({ queryKey: ['lists'] })
+  }, [queryClient]) // Depende do queryClient
+
   const onSelectingList = (listId: string) => {
     const list = createdLists.find((l) => l.id === listId)
     if (!list) return
@@ -164,11 +168,6 @@ export const AnalysisProvider = ({ children }: RequirementProviderProps) => {
       setSelectedLists((prev) => [...prev, list])
     }
   }
-
-  // Chamada inicial para buscar os dados quando o provider montar
-  useEffect(() => {
-    onGetLists()
-  }, []) // O array vazio garante que isso rode apenas uma vez
 
   // O valor que será provido pelo contexto
   const contextValue: AnalysisContextType = {
@@ -193,7 +192,7 @@ export const AnalysisProvider = ({ children }: RequirementProviderProps) => {
 }
 
 // -----------------------------------------------------------
-// 4. Hook Personalizado para Consumir o Contexto
+// 4. Hook Personalizado para Consumir o Contexto (inalterado)
 // -----------------------------------------------------------
 
 export const useAnalysis = () => {

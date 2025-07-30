@@ -1,5 +1,4 @@
 import { api } from '@/lib/axios'
-import { type AxiosResponse } from 'axios'
 
 export interface AnalysisListResponse {
   id: string
@@ -49,39 +48,44 @@ export const AnalysisService = {
   getAnalysisStatus: async (
     analysisId: string,
     signal?: AbortSignal
-  ): Promise<AxiosResponse<YoloAnalysisStatusResponse>> => {
-    return api.get<YoloAnalysisStatusResponse>(`/api/yolo/status/${analysisId}`, { signal })
+  ): Promise<YoloAnalysisStatusResponse> => {
+    const response = await api.get<YoloAnalysisStatusResponse>(`/api/yolo/status/${analysisId}`, {
+      signal,
+    })
+    return response.data
   },
 
-  getLists: async (signal?: AbortSignal): Promise<AxiosResponse<AnalysisListResponse[]>> => {
-    return api.get<AnalysisListResponse[]>('/api/lists', { signal })
+  getLists: async (signal?: AbortSignal): Promise<AnalysisListResponse[]> => {
+    const response = await api.get<AnalysisListResponse[]>('/api/lists', { signal })
+    return response.data
   },
 
-  createList: async (
-    params: Omit<AnalysisListResponse, 'id'>,
-    signal?: AbortSignal
-  ): Promise<AxiosResponse<AnalysisListResponse>> => {
-    return api.post<AnalysisListResponse>('/api/lists', params, { signal })
+  createList: async (payload: {
+    name: string
+    requirements: string[]
+  }): Promise<AnalysisListResponse> => {
+    const response = await api.post<AnalysisListResponse>('/api/lists', payload)
+    return response.data
   },
 
-  editList: async (
-    { id, ...params }: AnalysisListResponse,
-    signal?: AbortSignal
-  ): Promise<AxiosResponse<AnalysisListResponse>> => {
-    return api.put<AnalysisListResponse>(`/api/lists/${id}`, params, { signal })
+  editList: async (payload: {
+    id: string
+    name: string
+    requirements: string[]
+  }): Promise<AnalysisListResponse> => {
+    const response = await api.put<AnalysisListResponse>(`/api/lists/${payload.id}`, payload)
+    return response.data
   },
-  deleteList: async (
-    { id }: { id: string },
-    signal?: AbortSignal
-  ): Promise<AxiosResponse<void>> => {
-    return api.delete(`/api/lists/${id}`, { signal })
+
+  deleteList: async (payload: { id: string }): Promise<void> => {
+    await api.delete<void>(`/api/lists/${payload.id}`)
   },
 
   performImageAnalysis: async (
     formData: FormData,
     signal?: AbortSignal
-  ): Promise<AxiosResponse<ImageAnalysisReportResponse>> => {
-    return api.post<ImageAnalysisReportResponse>('/api/analyze-images', formData, {
+  ): Promise<ImageAnalysisReportResponse> => {
+    const response = await api.post<ImageAnalysisReportResponse>('/api/analyze-images', formData, {
       signal,
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (progressEvent) => {
@@ -91,5 +95,6 @@ export const AnalysisService = {
         console.log(`Upload de imagens para Análise Detalhada: ${percentCompleted}%`)
       },
     })
+    return response.data
   },
 }
