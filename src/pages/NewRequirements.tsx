@@ -1,7 +1,8 @@
 import { RequirementsServices } from '@/services/RequirementsService'
 import { AppDrawerPanel } from '@components/requirements/AppDrawerPanel'
 import { AppDrawerStage } from '@components/requirements/AppDrawerStage'
-import { Box, Grid, styled, type GridProps } from '@mui/material'
+import { Grid, styled } from '@mui/material'
+import { green } from '@mui/material/colors'
 import saveAs from 'file-saver'
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -9,8 +10,19 @@ import { RANDOM_RGBA_COLORS, RANDOM_SOLID_COLORS } from '../constants/rgbaOption
 import { useSnackbar } from '../contexts/SnackBarContext'
 import type { ClassDefinition, ImageWithRects } from '../types/Shapes'
 
-const GridStyled = styled(Grid)<GridProps>(({ theme }) => ({
-  height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - ${105}px)`,
+export const GridStyledTest = styled(Grid)(({ theme }) => ({
+  height: `calc(100vh - ${theme.mixins.toolbar.minHeight}px - 8px)`,
+  padding: theme.spacing(2),
+  backgroundColor: theme.palette.background.default,
+  [theme.breakpoints.down('md')]: {
+    backgroundColor: theme.palette.secondary.main,
+  },
+  [theme.breakpoints.up('md')]: {
+    backgroundColor: theme.palette.primary.main,
+  },
+  [theme.breakpoints.up('lg')]: {
+    backgroundColor: green[500],
+  },
 }))
 
 type DeleteRectangleProps = {
@@ -322,28 +334,53 @@ const NewRequirementsPage = () => {
   )
 
   return (
-    <Box>
-      <DrawerContext value={drawerContextValue}>
-        <GridStyled container spacing={0.5} columns={12}>
-          <AppDrawerPanel
-            onHandleExporting={onExportClick}
-            onHandleUploading={handleImageUpload}
-            onStartTraining={handleStartTraining}
-          />
-          <AppDrawerStage
-            selectedImage={selectedImage}
-            onUpdateImageRects={handleUpdateImageRects}
-            onSetExportFunction={(exportFn) => {
-              appDrawerExportRef.current = exportFn
-            }}
-            images={images}
-            onSetSelectedImage={setSelectedImage}
-          />
-        </GridStyled>
-      </DrawerContext>
-    </Box>
+    <DrawerContext value={drawerContextValue}>
+      <GridStyledTest container spacing={0.5} columns={12} sx={{ backgroundColor: 'purple' }}>
+        <AppDrawerPanel
+          onHandleExporting={onExportClick}
+          onHandleUploading={handleImageUpload}
+          onStartTraining={handleStartTraining}
+        />
+        <AppDrawerStage
+          selectedImage={selectedImage}
+          onUpdateImageRects={handleUpdateImageRects}
+          onSetExportFunction={(exportFn) => {
+            appDrawerExportRef.current = exportFn
+          }}
+          images={images}
+          onSetSelectedImage={setSelectedImage}
+        />
+      </GridStyledTest>
+    </DrawerContext>
   )
 }
 
 export const useDrawerContext = () => useContext(DrawerContext)
 export default NewRequirementsPage
+
+//  <Grid container columns={12}>
+//       <GridStyled size={{ xs: 4, sm: 4, md: 3 }} sx={{ backgroundColor: 'blue' }}>
+//         Sidebar
+//       </GridStyled>
+//       <GridStyled
+//         container
+//         size={{ xs: 8, sm: 8, md: 9 }}
+//         sx={{ display: 'flex', flexDirection: 'column', backgroundColor: 'purple' }}
+//       >
+//         <Grid sx={{ backgroundColor: 'white' }}>
+//           <Typography gutterBottom>Analysis Page</Typography>
+//         </Grid>
+//         <Grid flexGrow={1} sx={{ backgroundColor: 'darkgreen', minHeight: '300px' }}>
+//           <Box>
+//             <Typography variant="h6" gutterBottom>
+//               Analysis Content Goes Here
+//             </Typography>
+//           </Box>
+//         </Grid>
+//         <Grid sx={{ backgroundColor: 'gray', maxHeight: '170px' }}>
+//           <Typography variant="body1" gutterBottom>
+//             Additional content or components can be added here.
+//           </Typography>
+//         </Grid>
+//       </GridStyled>
+//     </Grid>

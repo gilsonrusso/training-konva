@@ -1,14 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query' // Importe estes
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 
-import { ThemeProvider } from '@mui/material'
 import { RouterProvider } from 'react-router'
-import { SnackbarProvider } from './contexts/SnackBarContext.tsx'
-import { UnsavedChangesProvider } from './contexts/UnsavedChangesContext.tsx'
-import Loading from './layout/commons/Loading.tsx'
-import { theme } from './layout/theme.ts'
+import { AppProvider } from './contexts/index.tsx'
 import { router } from './router.tsx'
 
 /**
@@ -48,39 +43,13 @@ async function enableMocking() {
 // Chama a função para habilitar o mocking.
 // A aplicação React só é renderizada após o Service Worker ser iniciado (ou a Promise resolver).
 enableMocking().then(() => {
-  // Crie uma nova instância do QueryClient
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Ajuste o tempo que os dados ficam "stale" (velhos) no cache.
-        // 0 = sempre refetch, Infinity = nunca refetch (até invalidação manual)
-        // 5 * 60 * 1000 = 5 minutos (exemplo)
-        staleTime: 5 * 60 * 1000,
-        refetchOnWindowFocus: true, // Re-busca quando a janela foca (pode ser ajustado)
-        retry: 2, // Tenta refetch 2 vezes em caso de falha
-      },
-    },
-  })
-
   // Ponto de entrada da sua aplicação React.
   // Renderiza o componente principal dentro do StrictMode para verificações adicionais.
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      {/* ThemeProvider do Material-UI para aplicar o tema global */}
-      <ThemeProvider theme={theme} noSsr>
-        {/* Provedor de Contexto para gerenciar mudanças não salvas */}
-        <UnsavedChangesProvider>
-          <QueryClientProvider client={queryClient}>
-            {/* Provedor de Contexto para exibir mensagens de Snackbar */}
-            <SnackbarProvider>
-              {/* Provedor de Roteamento para gerenciar as rotas da aplicação */}
-              <RouterProvider router={router} />
-            </SnackbarProvider>
-            {/* Componente de Loading que pode ser controlado por eventos globais */}
-            <Loading />
-          </QueryClientProvider>
-        </UnsavedChangesProvider>
-      </ThemeProvider>
+      <AppProvider>
+        <RouterProvider router={router} />
+      </AppProvider>
     </StrictMode>
   )
 })

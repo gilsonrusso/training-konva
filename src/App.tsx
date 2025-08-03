@@ -104,7 +104,7 @@ function App() {
       </AppBarStyled>
       <Toolbar />
       <Box display={'flex'}>
-        <Box sx={{ padding: 4, width: '100%' }}>
+        <Box sx={{ width: '100%' }}>
           <Outlet />
         </Box>
       </Box>

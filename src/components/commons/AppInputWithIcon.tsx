@@ -1,6 +1,6 @@
+import { Box } from '@mui/material'
 import IconButton from '@mui/material/IconButton'
 import InputBase, { type InputBaseProps } from '@mui/material/InputBase'
-import Paper from '@mui/material/Paper'
 import type { ReactElement } from 'react'
 
 type AppInputWihtIconProps = InputBaseProps & {
@@ -15,22 +15,45 @@ export const AppInputWihtIcon = ({
   ...rest
 }: AppInputWihtIconProps) => {
   return (
-    <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center' }}>
-      <InputBase
-        {...rest}
-        sx={{ ml: 1, flex: 1 }}
-        placeholder="Add Class"
-        inputProps={{ 'aria-label': 'add class' }}
-      />
-      <IconButton
-        disabled={disabled}
-        onClick={handleButtonClick}
-        type="button"
-        sx={{ p: '10px' }}
-        aria-label="class"
+    <Box
+      component="form"
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        borderRadius: '0px',
+        padding: '4px',
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          backgroundColor: '#323232',
+          paddingLeft: '8px',
+          paddingRight: '8px',
+        }}
       >
-        {Icon}
-      </IconButton>
-    </Paper>
+        <InputBase
+          {...rest}
+          sx={{
+            ml: 1,
+            flex: 1,
+          }}
+          placeholder="Add Requirement Name"
+          inputProps={{ 'aria-label': 'add requirement' }}
+        />
+        <IconButton
+          disabled={disabled}
+          onClick={handleButtonClick}
+          type="button"
+          sx={{ p: '10px' }}
+          aria-label="class"
+        >
+          {Icon}
+        </IconButton>
+      </Box>
+    </Box>
   )
 }

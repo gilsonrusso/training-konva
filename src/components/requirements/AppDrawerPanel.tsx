@@ -1,12 +1,12 @@
 import AddIcon from '@mui/icons-material/Add'
-import { Box, Button, Divider, Grid, Menu, MenuItem, Paper, Typography } from '@mui/material'
+import { Box, Button, Grid, Menu, MenuItem, Stack, Typography, useTheme } from '@mui/material'
 import { useDrawerContext } from '@pages/NewRequirements'
 import React, { memo, useCallback, useRef, useState } from 'react'
 import { containerVariants } from '../../layout/animations/variants'
 import { AppCheckboxList } from '../commons/AppCheckBoxList'
 import { AppInputWihtIcon } from '../commons/AppInputWithIcon'
 import { AppRectList } from '../commons/AppRectList'
-import { AnimatedGridStyled } from '../commons/muiMotions/AnimatedGridStyled'
+import { AnimatedItemStyled } from '../commons/muiMotions/AnimatedItemStyled'
 
 type AppDrawerPanelProps = {
   onHandleExporting: (exportType: 'image' | 'yolo') => void
@@ -26,6 +26,7 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { handleAddClassItem, images } = useDrawerContext()
+  const theme = useTheme()
 
   const numberImagesLoaded = useCallback(() => {
     return images?.length || 0
@@ -55,128 +56,117 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
     handleExportMenuClose()
   }
 
+  const panelRef = useRef<HTMLDivElement | null>(null)
+
   return (
-    <Grid container spacing={0.5} flexDirection={'column'} size={{ xs: 12, sm: 12, md: 3 }}>
+    <Stack
+      sx={{ backgroundColor: 'background.paper', padding: 1 }}
+      height={`calc(100vh - ${theme.mixins.toolbar.minHeight}px - 40px)`}
+      spacing={0.5}
+      ref={panelRef}
+    >
+      {/* Export | Upload - Section  */}
+      <AnimatedItemStyled
+        variants={containerVariants}
+        sx={{ borderRadius: '4px 0 0 0', flex: '0 0 20%' }}
+      >
+        <Box sx={{ display: 'flex', width: '100%' }}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            multiple
+            onChange={onHandleUploading}
+            style={{ display: 'none' }}
+            id="image-upload-input"
+          />
+          <label style={{ width: '100%' }} htmlFor="image-upload-input">
+            <Button size="small" fullWidth variant="outlined" component="span">
+              Upload
+            </Button>
+          </label>
+        </Box>
+      </AnimatedItemStyled>
       {/* Classes List - Section  */}
-      <AnimatedGridStyled
+      <AnimatedItemStyled
         layout
         variants={containerVariants}
-        container
-        spacing={0}
-        flexDirection={'column'}
-        sx={{ borderRadius: '8px 0 0 0' }}
+        sx={{
+          borderRadius: '0',
+          flex: '0 0 32%',
+          overflowY: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 0,
+        }}
       >
-        <Grid padding={1}>
-          <AppInputWihtIcon
-            disabled={newClassName.length === 0}
-            value={newClassName}
-            icon={<AddIcon />}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setNewClassName(event.target.value)
-            }}
-            handleButtonClick={handleAddClass}
-          />
-          <AppCheckboxList />
-        </Grid>
-      </AnimatedGridStyled>
+        <AppInputWihtIcon
+          disabled={newClassName.length === 0}
+          value={newClassName}
+          icon={<AddIcon />}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setNewClassName(event.target.value)
+          }}
+          handleButtonClick={handleAddClass}
+        />
+        <AppCheckboxList />
+      </AnimatedItemStyled>
       {/* Rect List - Section  */}
-      <AnimatedGridStyled
+      <AnimatedItemStyled
         variants={containerVariants}
-        container
-        // sx={{ maxHeight: '288px' }}
-        spacing={0}
-        flexDirection={'column'}
-        flexGrow={3}
+        sx={{ borderRadius: '0', flex: '0 0 32%', overflowY: 'hidden' }}
       >
-        <Box padding={1} flexGrow={1}>
-          <AppRectList />
-        </Box>
-      </AnimatedGridStyled>
-      {/* Export | Upload - Section  */}
-      <AnimatedGridStyled
-        variants={containerVariants}
-        sx={{ maxHeight: '170px', padding: '4px' }}
-        flexGrow={1}
-      >
-        <Paper sx={{ height: '100%', padding: 1 }}>
-          <Grid container display={'flex'} flexDirection={'column'}>
-            <Grid sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption">Export</Typography>
-              <Button
-                id="export-button"
-                size="small"
-                aria-controls={openExportMenu ? 'export-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={openExportMenu ? 'true' : undefined}
-                onClick={handleExportMenuClick}
-                variant="outlined"
-                disabled={images?.length === 0}
-              >
-                Export
-              </Button>
-              <Menu
-                id="export-menu"
-                anchorEl={anchorEl}
-                open={openExportMenu}
-                onClose={handleExportMenuClose}
-                MenuListProps={{
-                  'aria-labelledby': 'export-button',
-                }}
-              >
-                <MenuItem onClick={() => handleExportOptionClick('image')}>
-                  Export Image (PNG)
-                </MenuItem>
-                <MenuItem onClick={() => handleExportOptionClick('yolo')}>
-                  Export Anotations (YOLO)
-                </MenuItem>
-              </Menu>
-            </Grid>
-            <Divider sx={{ marginY: 1 }} />
-            <Grid>
-              <Box sx={{ display: 'flex', width: '100%' }}>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  multiple
-                  onChange={onHandleUploading}
-                  style={{ display: 'none' }}
-                  id="image-upload-input"
-                />
-                <label style={{ width: '100%' }} htmlFor="image-upload-input">
-                  <Button size="small" fullWidth variant="outlined" component="span">
-                    Upload
-                  </Button>
-                </label>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-      </AnimatedGridStyled>
+        <AppRectList />
+      </AnimatedItemStyled>
       {/* Summary - Section  */}
-      <AnimatedGridStyled
+      <AnimatedItemStyled
         variants={containerVariants}
-        sx={{ borderRadius: '0 0 0 8px', maxHeight: '80px', padding: '4px' }}
-        flexGrow={1}
+        sx={{ borderRadius: '0 0 0 8px', flex: '0 0 10%' }}
       >
-        <Paper sx={{ height: '100%', padding: 1 }}>
-          <Typography variant="caption">Summary</Typography>
-          <Grid
-            container
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}
-          >
-            <Grid sx={{ display: 'flex', gap: 5 }}>
-              <Typography variant="body2">{`Images: ${numberImagesLoaded() || 0}`}</Typography>
-              <Typography variant="body2">{`Rects: ${numberRectsCreated() || 0}`}</Typography>
-            </Grid>
-            <Grid sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <Button onClick={onStartTraining} size="small" color="secondary" variant="contained">
-                Start Training
-              </Button>
-            </Grid>
+        <Typography variant="caption">Summary</Typography>
+        <Grid
+          container
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}
+        >
+          <Grid sx={{ display: 'flex', gap: 5 }}>
+            <Typography variant="body2">{`Images: ${numberImagesLoaded() || 0}`}</Typography>
+            <Typography variant="body2">{`Rects: ${numberRectsCreated() || 0}`}</Typography>
           </Grid>
-        </Paper>
-      </AnimatedGridStyled>
-    </Grid>
+          <Grid sx={{ display: 'flex', alignItems: 'flex-end' }}>
+            <Button
+              id="export-button"
+              size="small"
+              aria-controls={openExportMenu ? 'export-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={openExportMenu ? 'true' : undefined}
+              onClick={handleExportMenuClick}
+              variant="outlined"
+              disabled={images?.length === 0}
+            >
+              Export
+            </Button>
+            <Menu
+              id="export-menu"
+              anchorEl={anchorEl}
+              open={openExportMenu}
+              onClose={handleExportMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'export-button',
+              }}
+            >
+              <MenuItem onClick={() => handleExportOptionClick('image')}>
+                Export Image (PNG)
+              </MenuItem>
+              <MenuItem onClick={() => handleExportOptionClick('yolo')}>
+                Export Anotations (YOLO)
+              </MenuItem>
+            </Menu>
+            <Button onClick={onStartTraining} size="small" color="secondary" variant="contained">
+              Start Training
+            </Button>
+          </Grid>
+        </Grid>
+      </AnimatedItemStyled>
+    </Stack>
   )
 })

@@ -14,3 +14,20 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Style the entire scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Style the scrollbar thumb */
+::-webkit-scrollbar-thumb {
+  background-color: #424242;
+  border-radius: 5px;
+}
+
+/* Style the scrollbar track */
+::-webkit-scrollbar-track {
+  background-color: #747474;
+  border-radius: 5px;
+}

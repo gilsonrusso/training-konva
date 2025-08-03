@@ -14,13 +14,12 @@ export const AppRectList = () => {
       sx={{
         width: '100%',
         height: '100%',
-        bgcolor: 'background.paper',
         maxHeight: '270px',
         overflowY: 'auto',
       }}
       subheader={
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ListSubheader>Rect List</ListSubheader>
+          <ListSubheader sx={{ backgroundColor: 'transparent' }}>Labels List</ListSubheader>
           <Badge badgeContent={`${selectedImage?.rects.length || 0}`} color="primary"></Badge>
         </Box>
       }
@@ -28,7 +27,7 @@ export const AppRectList = () => {
       {!selectedImage?.rects && (
         <>
           <Typography sx={{ paddingLeft: '16px' }} variant="body2" color="text.secondary">
-            No rectangle created.
+            No labels created.
           </Typography>
         </>
       )}

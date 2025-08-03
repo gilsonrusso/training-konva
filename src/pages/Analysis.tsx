@@ -1,5 +1,5 @@
-import { AppStepper } from '../components/analysis/AppStepper'
-import { AnalysisProvider } from '../contexts/AnalysisContext'
+import { AppStepper } from '@/components/analysis/AppStepper'
+import { AnalysisProvider } from '@/contexts/AnalysisContext'
 
 const AnalysisPage = () => {
   return (

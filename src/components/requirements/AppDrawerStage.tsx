@@ -613,6 +613,7 @@ export const AppDrawerStage = memo(function AppDrawerStage({
       flexDirection={'column'}
       flexGrow={1}
       overflow={'hidden'}
+      size={{ xs: 12, sm: 10, md: 9, lg: 8 }}
     >
       {/* Top section of the interface: Tool buttons and drawing area */}
       <GridStyled

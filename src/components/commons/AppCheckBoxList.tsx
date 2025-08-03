@@ -16,16 +16,14 @@ export const AppCheckboxList = () => {
   return (
     <List
       sx={{
-        marginTop: '8px',
         width: '100%',
-        bgcolor: 'background.paper',
-        height: '220px',
-        maxHeight: '220px',
-        overflowY: 'auto',
+        height: '100%',
+        overflowY: 'hidden',
+        paddingRight: '8px',
       }}
       subheader={
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <ListSubheader>Classes List</ListSubheader>
+          <ListSubheader sx={{ backgroundColor: 'transparent' }}>Requirements List</ListSubheader>
           <Badge badgeContent={`${classItems?.length || 0}`} color="primary"></Badge>
         </Box>
       }
@@ -33,44 +31,52 @@ export const AppCheckboxList = () => {
       {classItems?.length === 0 && (
         <>
           <Typography sx={{ paddingLeft: '16px' }} variant="body2" color="text.secondary">
-            No classes created.
+            No Requirements created.
           </Typography>
         </>
       )}
+      <Box
+        sx={{
+          width: '100%',
+          height: '70%',
+          overflowY: 'auto',
+          paddingLeft: '8px',
+        }}
+      >
+        {classItems?.map(({ id, name }, index) => {
+          const labelId = `checkbox-list-label-${id}`
 
-      {classItems?.map(({ id, name }, index) => {
-        const labelId = `checkbox-list-label-${id}`
-
-        return (
-          <ListItem
-            dense
-            key={id}
-            secondaryAction={
-              <IconButton
-                onClick={() => handleDeleteClassItem(id)}
-                edge="end"
-                aria-label="comments"
-              >
-                <DeleteForeverIcon />
-              </IconButton>
-            }
-            disablePadding
-          >
-            <ListItemButton role={undefined} onClick={() => handleSetClassItem(index)} dense>
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={index === classItemSelected}
-                  tabIndex={-1}
-                  disableRipple
-                  inputProps={{ 'aria-labelledby': labelId }}
-                />
-              </ListItemIcon>
-              <ListItemText id={labelId} primary={`${name}`} />
-            </ListItemButton>
-          </ListItem>
-        )
-      })}
+          return (
+            <ListItem
+              dense
+              key={id}
+              secondaryAction={
+                <IconButton
+                  onClick={() => handleDeleteClassItem(id)}
+                  edge="end"
+                  aria-label="comments"
+                >
+                  <DeleteForeverIcon />
+                </IconButton>
+              }
+              disablePadding
+            >
+              <ListItemButton role={undefined} onClick={() => handleSetClassItem(index)} dense>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={index === classItemSelected}
+                    tabIndex={-1}
+                    disableRipple
+                    inputProps={{ 'aria-labelledby': labelId }}
+                  />
+                </ListItemIcon>
+                <ListItemText id={labelId} primary={`${name}`} />
+              </ListItemButton>
+            </ListItem>
+          )
+        })}
+      </Box>
     </List>
   )
 }
