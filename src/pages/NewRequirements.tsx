@@ -335,12 +335,14 @@ const NewRequirementsPage = () => {
 
   return (
     <DrawerContext value={drawerContextValue}>
-      <GridStyledTest container spacing={0.5} columns={12} sx={{ backgroundColor: 'purple' }}>
-        <AppDrawerPanel
-          onHandleExporting={onExportClick}
-          onHandleUploading={handleImageUpload}
-          onStartTraining={handleStartTraining}
-        />
+      <GridStyledTest container spacing={0.5} columns={12}>
+        <Grid size={{ sm: 12, md: 3, lg: 3 }} sx={{ padding: 0 }}>
+          <AppDrawerPanel
+            onHandleExporting={onExportClick}
+            onHandleUploading={handleImageUpload}
+            onStartTraining={handleStartTraining}
+          />
+        </Grid>
         <AppDrawerStage
           selectedImage={selectedImage}
           onUpdateImageRects={handleUpdateImageRects}
@@ -357,30 +359,3 @@ const NewRequirementsPage = () => {
 
 export const useDrawerContext = () => useContext(DrawerContext)
 export default NewRequirementsPage
-
-//  <Grid container columns={12}>
-//       <GridStyled size={{ xs: 4, sm: 4, md: 3 }} sx={{ backgroundColor: 'blue' }}>
-//         Sidebar
-//       </GridStyled>
-//       <GridStyled
-//         container
-//         size={{ xs: 8, sm: 8, md: 9 }}
-//         sx={{ display: 'flex', flexDirection: 'column', backgroundColor: 'purple' }}
-//       >
-//         <Grid sx={{ backgroundColor: 'white' }}>
-//           <Typography gutterBottom>Analysis Page</Typography>
-//         </Grid>
-//         <Grid flexGrow={1} sx={{ backgroundColor: 'darkgreen', minHeight: '300px' }}>
-//           <Box>
-//             <Typography variant="h6" gutterBottom>
-//               Analysis Content Goes Here
-//             </Typography>
-//           </Box>
-//         </Grid>
-//         <Grid sx={{ backgroundColor: 'gray', maxHeight: '170px' }}>
-//           <Typography variant="body1" gutterBottom>
-//             Additional content or components can be added here.
-//           </Typography>
-//         </Grid>
-//       </GridStyled>
-//     </Grid>

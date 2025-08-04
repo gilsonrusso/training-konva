@@ -67,15 +67,21 @@ export const ImageCarousel = memo(function ImageCarousel({
   }, [selectedImage, images])
 
   return (
-    <Box>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        alignItems: 'center',
+        maxWidth: '100%',
+      }}
+    >
       <Grid
         sx={{
           width: '100%',
-          maxWidth: '1000px',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          // paddingY: `${(100 * (SCALE_FACTOR - 1)) / 2}px`,?
         }}
       >
         <IconButton

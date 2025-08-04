@@ -60,8 +60,9 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
 
   return (
     <Stack
-      sx={{ backgroundColor: 'background.paper', padding: 1 }}
-      height={`calc(100vh - ${theme.mixins.toolbar.minHeight}px - 40px)`}
+      sx={{ paddingBottom: 4 }}
+      height="100%"
+      maxHeight={`calc(100vh - ${theme.mixins.toolbar.minHeight}px - 40px)`}
       spacing={0.5}
       ref={panelRef}
     >
