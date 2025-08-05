@@ -1,4 +1,3 @@
-// src/components/ImageUploader/ImageUploader.tsx
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import { Button, Paper, styled, Typography, type PaperProps } from '@mui/material'
 import React, { useCallback, useRef, useState } from 'react'

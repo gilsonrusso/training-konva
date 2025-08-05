@@ -6,26 +6,24 @@ import { containerVariants } from '../../layout/animations/variants'
 import { AppCheckboxList } from '../commons/AppCheckBoxList'
 import { AppInputWihtIcon } from '../commons/AppInputWithIcon'
 import { AppRectList } from '../commons/AppRectList'
+import { AppDragAndDrop } from '../commons/DragAndDrop'
 import { AnimatedItemStyled } from '../commons/muiMotions/AnimatedItemStyled'
 
 type AppDrawerPanelProps = {
   onHandleExporting: (exportType: 'image' | 'yolo') => void
-  onHandleUploading: (e: React.ChangeEvent<HTMLInputElement>) => void
   onStartTraining: () => void
 }
 
 export const AppDrawerPanel = memo(function AppDrawerPanel({
   onHandleExporting,
-  onHandleUploading,
   onStartTraining,
 }: AppDrawerPanelProps) {
   const [newClassName, setNewClassName] = useState('')
   // State to control the export menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const openExportMenu = Boolean(anchorEl)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { handleAddClassItem, images } = useDrawerContext()
+  const { images, handleAddClassItem, handleFilesToUpload } = useDrawerContext()
   const theme = useTheme()
 
   const numberImagesLoaded = useCallback(() => {
@@ -56,6 +54,13 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
     handleExportMenuClose()
   }
 
+  const handleFilesFromDragAndDrop = useCallback(
+    (files: FileList) => {
+      handleFilesToUpload(files) // Passa os arquivos para a prop `onFilesUploaded`
+    },
+    [handleFilesToUpload]
+  )
+
   const panelRef = useRef<HTMLDivElement | null>(null)
 
   return (
@@ -72,20 +77,13 @@ export const AppDrawerPanel = memo(function AppDrawerPanel({
         sx={{ borderRadius: '4px 0 0 0', flex: '0 0 20%' }}
       >
         <Box sx={{ display: 'flex', width: '100%' }}>
-          <input
-            type="file"
-            ref={fileInputRef}
+          <AppDragAndDrop
+            onFilesSelected={handleFilesFromDragAndDrop}
+            labelText="Arraste ou clique para fazer upload"
             accept="image/*"
-            multiple
-            onChange={onHandleUploading}
-            style={{ display: 'none' }}
-            id="image-upload-input"
+            multiple={true}
+            sx={{ width: '100%', minHeight: 'unset', padding: 1 }}
           />
-          <label style={{ width: '100%' }} htmlFor="image-upload-input">
-            <Button size="small" fullWidth variant="outlined" component="span">
-              Upload
-            </Button>
-          </label>
         </Box>
       </AnimatedItemStyled>
       {/* Classes List - Section  */}

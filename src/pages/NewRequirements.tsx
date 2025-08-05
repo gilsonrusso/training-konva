@@ -1,3 +1,7 @@
+import {
+  ImageUploadProgress,
+  type ImageUploadStatus,
+} from '@/components/commons/ImageUploadProgress'
 import { RequirementsServices } from '@/services/RequirementsService'
 import { AppDrawerPanel } from '@components/requirements/AppDrawerPanel'
 import { AppDrawerStage } from '@components/requirements/AppDrawerStage'
@@ -42,6 +46,7 @@ type DrawerContextType = {
   handleAddClassItem: ({ name }: AddClassItemProps) => void
   handleDeleteClassItem: (classId: number) => void
   handlerDeleteRectangle: ({ imageId, rectId }: DeleteRectangleProps) => void
+  handleFilesToUpload: (files: FileList) => void
 }
 
 const DrawerContext = createContext({} as DrawerContextType)
@@ -49,6 +54,8 @@ const DrawerContext = createContext({} as DrawerContextType)
 const NewRequirementsPage = () => {
   const [images, setImages] = useState<ImageWithRects[]>([])
   const [selectedImage, setSelectedImage] = useState<ImageWithRects | null>(null)
+
+  const [uploadStatus, setUploadStatus] = useState<ImageUploadStatus[]>([]) // Novo estado para o feedback de upload
 
   const [classItemSelected, setClassItemSelected] = useState<number>(-1)
   const [classItems, setClassItems] = useState<ClassDefinition[]>([])
@@ -58,57 +65,6 @@ const NewRequirementsPage = () => {
   >(null)
 
   const { showSnackbar } = useSnackbar()
-
-  const handleImageUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || [])
-
-      if (files.length === 0) {
-        showSnackbar('No image selected to upload.')
-        return
-      }
-
-      // Clear selection and rectangles when loading new images
-      setSelectedImage(null)
-      setImages([])
-
-      let loadedCount = 0
-      const newImagesArray: ImageWithRects[] = []
-
-      files.forEach((file) => {
-        const id = uuidv4()
-        const img = new window.Image()
-        img.src = URL.createObjectURL(file)
-        img.onload = () => {
-          const newImage: ImageWithRects = { id, image: img, rects: [], originalFile: file }
-          newImagesArray.push(newImage)
-          loadedCount++
-
-          // When all images are loaded, update the states
-          if (loadedCount === files.length) {
-            setImages(newImagesArray)
-            // Sets the first image as selected by default
-            if (newImagesArray.length > 0) {
-              setSelectedImage(newImagesArray[0])
-            }
-            showSnackbar(`${loadedCount} imagem(ns) carregada(s) com sucesso!`)
-          }
-        }
-        img.onerror = (err) => {
-          console.error('Erro ao carregar a imagem:', err)
-          showSnackbar('Não foi possível carregar uma ou mais imagens.')
-          loadedCount++
-          if (loadedCount === files.length) {
-            setImages(newImagesArray)
-            if (newImagesArray.length > 0) {
-              setSelectedImage(newImagesArray[0])
-            }
-          }
-        }
-      })
-    },
-    [showSnackbar, setImages, setSelectedImage]
-  )
 
   const handlerDeleteRectangle = useCallback(
     ({ imageId, rectId }: DeleteRectangleProps) => {
@@ -310,6 +266,87 @@ const NewRequirementsPage = () => {
     [selectedImage]
   )
 
+  // FUNÇÃO para lidar com os arquivos recebidos do AppDragAndDrop (via AppDrawerPanel)
+  const handleFilesToUpload = useCallback(
+    async (files: FileList) => {
+      if (!files || files.length === 0) {
+        showSnackbar('Nenhuma imagem selecionada para upload.')
+        return
+      }
+
+      // Clear selection and rectangles when loading new images
+      setSelectedImage(null)
+      setImages([])
+
+      const initialStatus: ImageUploadStatus[] = Array.from(files).map((file) => ({
+        file,
+        status: 'loading',
+      }))
+      setUploadStatus(initialStatus)
+
+      // Cria um array de Promises, uma para cada imagem
+      const loadPromises = Array.from(files).map((file, index) => {
+        return new Promise<ImageWithRects | null>((resolve) => {
+          const id = uuidv4()
+          const img = new window.Image()
+          img.src = URL.createObjectURL(file)
+
+          img.onload = () => {
+            const newImage: ImageWithRects = { id, image: img, rects: [], originalFile: file }
+            console.log(`Imagem carregada com sucesso: ${file.name}`)
+            // Atualiza o status do item no array de feedback
+            setUploadStatus((prevStatus) => {
+              const newStatus = [...prevStatus]
+              newStatus[index] = { ...newStatus[index], status: 'success' }
+              return newStatus
+            })
+            resolve(newImage) // Resolve a Promise com a imagem carregada
+          }
+
+          img.onerror = (err) => {
+            console.error('Erro ao carregar a imagem:', file.name, err)
+            // Atualiza o status para 'error'
+            setUploadStatus((prevStatus) => {
+              const newStatus = [...prevStatus]
+              newStatus[index] = { ...newStatus[index], status: 'error' }
+              return newStatus
+            })
+            showSnackbar(`Não foi possível carregar a imagem: ${file.name}`)
+            resolve(null) // Resolve com null para imagens que falharam
+          }
+        })
+      })
+
+      try {
+        // Aguarda que todas as Promises de carregamento de imagem sejam resolvidas
+        const loadedImages = await Promise.all(loadPromises)
+        // Filtra quaisquer imagens que falharam (são null)
+        const successfulImages = loadedImages.filter((img): img is ImageWithRects => img !== null)
+
+        console.log(
+          'Processamento de todas as imagens finalizado. Carregadas com sucesso:',
+          successfulImages.length
+        )
+
+        if (successfulImages.length > 0) {
+          setImages(successfulImages)
+          // Define a primeira imagem carregada com sucesso como selecionada
+          setSelectedImage(successfulImages[0])
+          showSnackbar(`${successfulImages.length} imagem(ns) carregada(s) com sucesso!`)
+        } else {
+          showSnackbar('Nenhuma imagem válida foi carregada.')
+        }
+      } catch (error) {
+        console.error('Erro durante o carregamento de imagens com Promise.all:', error)
+        showSnackbar('Ocorreu um erro inesperado ao carregar as imagens.')
+      } finally {
+        // Limpa o estado de feedback após a conclusão, com um pequeno delay para o usuário ver o resultado
+        setTimeout(() => setUploadStatus([]), 2000)
+      }
+    },
+    [showSnackbar, setImages, setSelectedImage]
+  )
+
   const drawerContextValue = useMemo(
     () => ({
       classItems,
@@ -320,40 +357,45 @@ const NewRequirementsPage = () => {
       handleSetClassItem,
       handleDeleteClassItem,
       handlerDeleteRectangle,
+      handleFilesToUpload,
     }),
     [
       classItemSelected,
       classItems,
+      images,
+      selectedImage,
       handleAddClassItem,
       handleDeleteClassItem,
       handleSetClassItem,
       handlerDeleteRectangle,
-      images,
-      selectedImage,
+      handleFilesToUpload,
     ]
   )
 
   return (
-    <DrawerContext value={drawerContextValue}>
-      <GridStyledTest container spacing={0.5} columns={12}>
-        <Grid size={{ sm: 12, md: 3, lg: 3 }} sx={{ padding: 0 }}>
-          <AppDrawerPanel
-            onHandleExporting={onExportClick}
-            onHandleUploading={handleImageUpload}
-            onStartTraining={handleStartTraining}
+    <>
+      <DrawerContext value={drawerContextValue}>
+        <GridStyledTest container spacing={0.5} columns={12}>
+          <Grid size={{ sm: 12, md: 3, lg: 3 }} sx={{ padding: 0 }}>
+            <AppDrawerPanel
+              onHandleExporting={onExportClick}
+              onStartTraining={handleStartTraining}
+            />
+          </Grid>
+          <AppDrawerStage
+            selectedImage={selectedImage}
+            onUpdateImageRects={handleUpdateImageRects}
+            onSetExportFunction={(exportFn) => {
+              appDrawerExportRef.current = exportFn
+            }}
+            images={images}
+            onSetSelectedImage={setSelectedImage}
           />
-        </Grid>
-        <AppDrawerStage
-          selectedImage={selectedImage}
-          onUpdateImageRects={handleUpdateImageRects}
-          onSetExportFunction={(exportFn) => {
-            appDrawerExportRef.current = exportFn
-          }}
-          images={images}
-          onSetSelectedImage={setSelectedImage}
-        />
-      </GridStyledTest>
-    </DrawerContext>
+        </GridStyledTest>
+      </DrawerContext>
+      {/* Renderiza o componente de progresso se houver imagens sendo carregadas */}
+      {uploadStatus.length > 0 && <ImageUploadProgress uploadStatus={uploadStatus} />}
+    </>
   )
 }
 
