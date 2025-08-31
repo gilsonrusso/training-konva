@@ -6,7 +6,7 @@ export function setInterceptors(api: AxiosInstance) {
     function (config) {
       console.log('[Request]', config.method?.toUpperCase(), config.url)
 
-      const token = sessionStorage.getItem('authToken')
+      const token = localStorage.getItem('authToken')
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`

@@ -1,8 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
-import { authLoader } from './components/auth/authLoader'
-import { authRedirectLoader } from './components/auth/authRedirectLoader'
+import { checkAuth } from './components/auth/authUtils'
 import Loading from './layout/commons/Loading'
 import Login from './pages/Login'
 
@@ -14,12 +13,12 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
-    loader: authRedirectLoader,
+    loader: () => checkAuth({ requireAuth: false, redirectPath: '/' }),
   },
   {
     path: '/',
     element: <App />,
-    loader: authLoader,
+    loader: () => checkAuth({ requireAuth: true, redirectPath: '/login' }),
     children: [
       {
         index: true,
