@@ -1,60 +1,58 @@
+import { useSnackbar } from '@/contexts/SnackBarContext'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
-import { Alert, Box, Button, Divider, Grid, TextField } from '@mui/material'
-import { useCallback, useState } from 'react'
+import { Box, Button, Divider, Grid, TextField } from '@mui/material'
+import { useCallback, useReducer } from 'react'
 import { useAnalysis } from '../../../../contexts/AnalysisContext'
-import { intersection, not, union } from '../../../../utils/commons'
 import { CreatedListsSection } from './CreatedListsSection'
 import { PrimarySelectionList } from './PrimarySelectionList'
+import { ActionTypes, appStepperOneReducer } from './reducer'
+
+const initialState = {
+  checkedRequirementNames: [],
+  newListName: '',
+}
 
 export const AppStepOne = () => {
-  const [checkedRequirementNames, setCheckedRequirementNames] = useState<readonly string[]>([])
-  const [newListName, setNewListName] = useState<string>('')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const { availableRequirementsNames, createdLists, onCreateList: createNewList } = useAnalysis()
+  const { showSnackbar } = useSnackbar()
+  const { availableRequirementsNames, createdLists, onCreateList } = useAnalysis()
+  const [state, dispatch] = useReducer(appStepperOneReducer, initialState)
+  const { newListName, checkedRequirementNames } = state
 
   const handleCreateNewList = useCallback(() => {
     if (newListName.trim() === '') {
-      setErrorMessage('O nome da lista não pode ser vazio.')
+      showSnackbar('O nome da lista não pode ser vazio.', 'error')
       return
     }
-    if (createdLists.some((list) => list.name.toLowerCase() === newListName.toLowerCase())) {
-      setErrorMessage('Já existe uma lista com este nome. Por favor, escolha outro nome.')
-      return
-    }
-    setErrorMessage(null)
 
-    createNewList(newListName, Array.from(checkedRequirementNames))
-    setNewListName('')
-    setCheckedRequirementNames([])
-  }, [newListName, checkedRequirementNames, createNewList, createdLists])
+    if (createdLists.some((list) => list.name.toLowerCase() === newListName.toLowerCase())) {
+      showSnackbar('Já existe uma lista com este nome. Por favor, escolha outro nome.', 'error')
+      return
+    }
+
+    onCreateList(newListName, Array.from(checkedRequirementNames))
+    dispatch({ type: ActionTypes.RESET_FORM })
+  }, [checkedRequirementNames, createdLists, newListName, onCreateList, showSnackbar])
 
   const handleToggle = useCallback(
     (value: string) => () => {
-      const currentIndex = checkedRequirementNames.indexOf(value)
-      const newChecked = [...checkedRequirementNames]
-
-      if (currentIndex === -1) {
-        newChecked.push(value)
-      } else {
-        newChecked.splice(currentIndex, 1)
-      }
-
-      setCheckedRequirementNames(newChecked)
+      dispatch({ type: ActionTypes.TOGGLE_REQUIREMENT, payload: value })
     },
-    [checkedRequirementNames]
+    []
   )
 
   const handleToggleAll = useCallback(
     (itemsToToggle: readonly string[]) => () => {
-      if (intersection(checkedRequirementNames, itemsToToggle).length === itemsToToggle.length) {
-        setCheckedRequirementNames(not(checkedRequirementNames, itemsToToggle))
-      } else {
-        setCheckedRequirementNames(union(checkedRequirementNames, itemsToToggle))
-      }
+      dispatch({
+        type: ActionTypes.TOGGLE_ALL_REQUIREMENTS,
+        payload: { itemsToToggle },
+      })
     },
-    [checkedRequirementNames]
+    []
   )
+
+  const handleNewListNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({ type: ActionTypes.SET_NEW_LIST_NAME, payload: e.target.value })
+  }
 
   return (
     <Grid
@@ -63,14 +61,6 @@ export const AppStepOne = () => {
       spacing={2}
       sx={{ alignItems: 'flex-start', p: 2, height: '100%', flexWrap: 'nowrap' }}
     >
-      {errorMessage && (
-        <Grid size={{ xs: 12 }}>
-          <Alert severity="error" onClose={() => setErrorMessage(null)} sx={{ mb: 2 }}>
-            {errorMessage}
-          </Alert>
-        </Grid>
-      )}
-
       <Grid
         size={{ xs: 12, md: 4 }}
         sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
@@ -81,7 +71,7 @@ export const AppStepOne = () => {
             variant="outlined"
             size="small"
             value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
+            onChange={handleNewListNameChange}
             fullWidth
           />
           <Button

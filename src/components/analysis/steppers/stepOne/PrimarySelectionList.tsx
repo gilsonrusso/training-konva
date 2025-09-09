@@ -1,3 +1,4 @@
+import { intersection } from '@/utils/commons'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Checkbox from '@mui/material/Checkbox'
@@ -7,10 +8,6 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
 import { memo } from 'react'
-
-function intersection<T>(a: readonly T[], b: readonly T[]) {
-  return a.filter((value) => b.includes(value))
-}
 
 interface PrimarySelectionListProps {
   title: React.ReactNode
