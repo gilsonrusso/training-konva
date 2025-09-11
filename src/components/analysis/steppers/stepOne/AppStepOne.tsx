@@ -5,9 +5,9 @@ import { useCallback, useReducer } from 'react'
 import { useAnalysis } from '../../../../contexts/AnalysisContext'
 import { CreatedListsSection } from './CreatedListsSection'
 import { PrimarySelectionList } from './PrimarySelectionList'
-import { ActionTypes, appStepperOneReducer } from './reducer'
+import { ActionTypes, appStepperOneReducer, type AppStepperOneState } from './reducer'
 
-const initialState = {
+const initialState: AppStepperOneState = {
   checkedRequirementNames: [],
   newListName: '',
 }

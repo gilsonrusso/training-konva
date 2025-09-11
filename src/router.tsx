@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
 import { checkAuth } from './components/auth/authUtils'
+import FallbackErrorBoundary from './components/commons/FallbackErrorBoundary'
 import Loading from './layout/commons/Loading'
 import Login from './pages/Login'
 
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
+        errorElement: <FallbackErrorBoundary />,
         element: (
           <Suspense fallback={<Loading />}>
             <AnalysisPage />
@@ -30,6 +32,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'new-requirements',
+        errorElement: <FallbackErrorBoundary />,
         element: (
           <Suspense fallback={<Loading />}>
             <NewRequirementsPage />
@@ -38,6 +41,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'training-history',
+        errorElement: <FallbackErrorBoundary />,
         element: (
           <Suspense fallback={<Loading />}>
             <TrainingHistoryPage />

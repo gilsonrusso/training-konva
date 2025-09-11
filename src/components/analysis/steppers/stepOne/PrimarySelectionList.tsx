@@ -60,7 +60,7 @@ export const PrimarySelectionList = memo(function PrimarySelectionList({
         role="list"
         dense
       >
-        {items.map((item: string) => {
+        {items?.map((item: string) => {
           const labelId = `available-requirement-item-${item}-label`
           return (
             <ListItemButton key={item} role="listitem" onClick={onToggleItem(item)}>

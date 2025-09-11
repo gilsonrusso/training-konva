@@ -55,13 +55,23 @@ export const AnalysisProvider = ({ children }: RequirementProviderProps) => {
   const { data: listsData, isPending: isLoadingLists } = useQuery<AnalysisListResponse[], Error>({
     queryKey: ['lists'],
     queryFn: ({ signal }) => AnalysisService.getLists(signal),
+    throwOnError: true, // Lança o erro para ser capturado pelo Error Boundary
   })
 
   // Transforme os dados brutos da lista para o formato de estado da UI (`AnalysisListUseState[]`)
   const createdLists = useMemo(() => {
-    // 'listsData' é o array bruto de `AnalysisListResponse[]` retornado pelo TanStack Query.
-    // Ele pode ser 'undefined' enquanto carregando, em erro, ou se a requisição ainda não ocorreu.
-    if (!listsData) return []
+    // O estado de erro agora é tratado pelo `throwOnError` e capturado pelo Error Boundary.
+    // Adicionamos uma verificação com Array.isArray para garantir que os dados da API
+    // são de fato um array antes de tentarmos usar o .map().
+    if (!Array.isArray(listsData)) {
+      // Se listsData não for um array (pode ser undefined, null, ou um objeto),
+      // retornamos um array vazio para evitar o crash e logamos um aviso.
+      if (listsData) {
+        // Loga apenas se não for undefined/null
+        console.warn('Resposta da API para "lists" não é um array:', listsData)
+      }
+      return []
+    }
 
     return listsData.map((item) => ({
       id: item.id,

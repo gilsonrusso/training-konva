@@ -16,16 +16,12 @@ import {
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 
 import { useAnalysis } from '@/contexts/AnalysisContext'
+import { useSnackbar } from '@/contexts/SnackBarContext'
 import { AnalysisService } from '@/services/AnalysisServices'
 import { AppDragAndDrop } from '@components/commons/DragAndDrop'
 import { useUnsavedChanges } from '@contexts/UnsavedChangesContext'
 import JSZip from 'jszip'
 
-// interface AnalysisResult {
-//   success: boolean
-//   message: string
-//   data: unknown
-// }
 export interface AppStepTwoHandles {
   analyzeImages: () => Promise<void>
 }
@@ -43,18 +39,13 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
 
   const { markAsDirty, markAsClean } = useUnsavedChanges()
   const { selectedLists, setCurrentAnalysisId } = useAnalysis()
+  const { showSnackbar } = useSnackbar()
 
   useImperativeHandle(ref, () => ({
     analyzeImages: handleAnalyzeAndSend,
   }))
 
-  // Nova função para analisar e enviar dados
   const handleAnalyzeAndSend = async () => {
-    if (imageFiles.length === 0) {
-      console.error('Nenhuma imagem carregada para análise.')
-      throw new Error('Nenhuma imagem para analisar.')
-    }
-
     try {
       const zip = new JSZip()
 
@@ -80,10 +71,10 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
 
       setCurrentAnalysisId(response.id)
 
-      console.log('Análise concluída com sucesso (simulado)!')
+      showSnackbar('Análise concluída com sucesso (simulado)!')
     } catch (error) {
+      showSnackbar('Erro ao analisar e enviar imagens', 'error')
       console.error('Erro ao analisar e enviar imagens:', error)
-      throw error
     }
   }
 
@@ -148,10 +139,6 @@ export const AppStepTwo = forwardRef<AppStepTwoHandles, AppStepTwoProps>(functio
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        Passo 2: Anexar Imagens e Documentos
-      </Typography>
-
       {/* Adicionando a exibição do selectedList */}
       {selectedLists.length > 0 && (
         <Typography variant="subtitle1" color="textSecondary" sx={{ mb: 2 }}>

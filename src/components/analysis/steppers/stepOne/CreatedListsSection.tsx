@@ -9,7 +9,7 @@ export const CreatedListsSection = memo(function CreatedListsSection() {
     createdLists,
     availableRequirementsNames,
     onDeleteList: deleteList,
-    oneEditList: saveListEdits,
+    onEditList: saveListEdits,
     onSelectingList: selectListForAppStepper, // Função de seleção
     selectedLists: selectedListForAppStepper, // Lista selecionada
   } = useAnalysis()
