@@ -1,7 +1,14 @@
+import { Stack } from '@mui/material'
 import Box from '@mui/material/Box'
-import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import Skeleton from '@mui/material/Skeleton'
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid'
+import { lazy, Suspense } from 'react'
 
-const columns: GridColDef<(typeof rows)[number]>[] = [
+const LazyDataGrid = lazy(() =>
+  import('@mui/x-data-grid').then((module) => ({ default: module.DataGrid }))
+)
+
+const columns: GridColDef<GridRowsProp[number]>[] = [
   { field: 'id', headerName: 'ID', width: 90 },
   {
     field: 'firstName',
@@ -28,7 +35,7 @@ const columns: GridColDef<(typeof rows)[number]>[] = [
     description: 'This column has a value getter and is not sortable.',
     sortable: false,
     width: 160,
-    valueGetter: (value, row) => `${row.firstName || ''} ${row.lastName || ''}`,
+    valueGetter: (_, row) => `${row.firstName || ''} ${row.lastName || ''}`,
   },
 ]
 
@@ -47,20 +54,33 @@ const rows = [
 export default function TrainingHistoryPage() {
   return (
     <Box sx={{ height: 400, width: '100%' }}>
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              pageSize: 5,
+      <Suspense
+        fallback={
+          <Stack spacing={1}>
+            <Skeleton variant="rectangular" width="100%" height={52} />
+            <Skeleton variant="rectangular" width="100%" height={30} />
+            <Skeleton variant="rectangular" width="100%" height={30} />
+            <Skeleton variant="rectangular" width="100%" height={30} />
+            <Skeleton variant="rectangular" width="100%" height={30} />
+            <Skeleton variant="rectangular" width="100%" height={30} />
+          </Stack>
+        }
+      >
+        <LazyDataGrid
+          rows={rows}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 5,
+              },
             },
-          },
-        }}
-        pageSizeOptions={[5]}
-        checkboxSelection
-        disableRowSelectionOnClick
-      />
+          }}
+          pageSizeOptions={[5]}
+          checkboxSelection
+          disableRowSelectionOnClick
+        />
+      </Suspense>
     </Box>
   )
 }

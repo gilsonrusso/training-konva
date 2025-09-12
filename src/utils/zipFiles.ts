@@ -1,5 +1,3 @@
-import JSZip from 'jszip'
-
 /**
  * Compacta uma lista de arquivos File em um único Blob ZIP.
  *
@@ -12,6 +10,7 @@ export const zipFiles = async (
   files: File[],
   zipFileName: string = 'archive.zip'
 ): Promise<Blob> => {
+  const JSZip = (await import('jszip')).default
   const zip = new JSZip()
 
   files.forEach((file) => {
@@ -36,4 +35,16 @@ export const zipFiles = async (
 
   console.log(`Arquivo ZIP '${zipFileName}' gerado com sucesso.`)
   return zipBlob
+}
+
+/**
+ * Cria um arquivo de texto (File) a partir de um conteúdo de string.
+ *
+ * @param content O conteúdo de texto para o arquivo.
+ * @param fileName O nome do arquivo a ser criado (ex: 'annotations.txt').
+ * @returns Um objeto File.
+ */
+export const createTextFile = (content: string, fileName: string): File => {
+  const blob = new Blob([content], { type: 'text/plain' })
+  return new File([blob], fileName, { type: 'text/plain' })
 }

@@ -8,6 +8,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default [
+  { ignores: ['dist/'] },
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { languageOptions: { globals: globals.browser } },
   { languageOptions: { globals: globals.node } },

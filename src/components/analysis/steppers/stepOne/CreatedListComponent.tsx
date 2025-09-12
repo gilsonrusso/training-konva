@@ -1,4 +1,4 @@
-import type { RequirementItem, createdListLocalState } from '@/types/analysis.types'
+import type { AnalysisListUseState, RequirementItem } from '@/types/analysis.types'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -20,10 +20,10 @@ import List from '@mui/material/List'
 import { memo, useEffect, useState } from 'react'
 
 interface CreatedListComponentProps {
-  list: createdListLocalState
+  list: AnalysisListUseState
   availableAllRequirementNames: string[] // Vem do CreatedListsSection (que pega do context)
   onDeleteList: (listId: string) => void // Vem do CreatedListsSection (que pega do context)
-  onSaveList: (listToSave: createdListLocalState) => void // Vem do CreatedListsSection (que pega do context)
+  onSaveList: (listToSave: AnalysisListUseState) => void // Vem do CreatedListsSection (que pega do context)
   isSelected: boolean
   onSelect: (listId: string) => void // Vem do CreatedListsSection (que pega do context)
 }
