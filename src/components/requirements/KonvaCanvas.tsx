@@ -40,6 +40,7 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const [crosshairPos, setCrosshairPos] = useState<{ x: number; y: number } | null>(null)
+  const cursorTimeoutRef = useRef<number | null>(null)
 
   useImperativeHandle(ref, () => ({
     exportStage: () => {
@@ -47,18 +48,23 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
     },
   }))
 
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+
+    const container = stage.container()
+    if (currentTool === DrawTools.Rectangle) {
+      container.style.cursor = 'crosshair'
+    } else {
+      container.style.cursor = 'default'
+    }
+  }, [currentTool])
+
   const handleMouseDown = () => {
     const stage = stageRef.current
     if (!stage || !selectedImage) return
 
-    if (currentTool === DrawTools.Select) {
-      return
-    }
-
-    if (classItemSelected === -1) {
-      showSnackbar('Please enter a class for the rectangle before drawing.')
-      return
-    }
+    if (currentTool === DrawTools.Select) return
 
     const pointer = stage.getPointerPosition()
     if (!pointer) return
@@ -69,9 +75,24 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
     const transform = layer.getAbsoluteTransform().copy().invert()
     const pos = transform.point(pointer)
 
+    const isWithinImage =
+      pos.x >= 0 &&
+      pos.x <= selectedImage.image.width &&
+      pos.y >= 0 &&
+      pos.y <= selectedImage.image.height
+
+    if (!isWithinImage) {
+      return
+    }
+
+    if (classItemSelected === -1) {
+      showSnackbar('Please enter a requeriment name for the rectangle before drawing.', 'warning')
+      return
+    }
+
     const selectedClass = classItems.find((c) => c.id === classItemSelected)
     if (!selectedClass) {
-      showSnackbar('Selected class not found. Please select a valid class.')
+      showSnackbar('Selected requeriment not found. Please select a valid requirement.', 'warning')
       return
     }
 
@@ -91,28 +112,38 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
 
   const handleMouseMove = () => {
     const stage = stageRef.current
-    if (!stage) return
+    if (!stage || !selectedImage) return
 
     const pointerPosition = stage.getPointerPosition()
     if (!pointerPosition) return
-
-    setCrosshairPos(pointerPosition)
-
-    if (currentTool === DrawTools.Select || !isDrawing || !newRect) {
-      return
-    }
-
-    const pointer = stage.getPointerPosition()
-    if (!pointer) return
 
     const layer = stage.getLayers()[0]
     if (!layer) return
 
     const transform = layer.getAbsoluteTransform().copy().invert()
-    const pos = transform.point(pointer)
+    const pos = transform.point(pointerPosition)
 
-    const width = pos.x - newRect.x
-    const height = pos.y - newRect.y
+    const isWithinImage =
+      pos.x >= 0 &&
+      pos.x <= selectedImage.image.width &&
+      pos.y >= 0 &&
+      pos.y <= selectedImage.image.height
+
+    if (isWithinImage) {
+      setCrosshairPos(pointerPosition)
+    } else {
+      setCrosshairPos(null)
+    }
+
+    if (currentTool === DrawTools.Select || !isDrawing || !newRect) {
+      return
+    }
+
+    const clampedX = Math.max(0, Math.min(pos.x, selectedImage.image.width))
+    const clampedY = Math.max(0, Math.min(pos.y, selectedImage.image.height))
+
+    const width = clampedX - newRect.x
+    const height = clampedY - newRect.y
 
     dispatch({ type: 'UPDATE_DRAWING', payload: { width, height } })
   }
@@ -142,9 +173,9 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
         rects: [...selectedImage.rects, finalRect],
       }
       onUpdateImageRects(updatedSelectedImage)
-      dispatch({ type: 'SET_TOOL', payload: DrawTools.Select })
+      // dispatch({ type: 'SET_TOOL', payload: DrawTools.Select })
     } else {
-      showSnackbar('Rectangle too small. Draw a larger rectangle.')
+      showSnackbar('Rectangle too small. Draw a larger rectangle.', 'warning')
     }
 
     dispatch({ type: 'FINISH_DRAWING' })
@@ -155,6 +186,20 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
 
     const stage = stageRef.current
     if (!stage) return
+
+    const container = stage.container()
+    if (cursorTimeoutRef.current) {
+      clearTimeout(cursorTimeoutRef.current)
+    }
+    container.style.cursor = e.evt.deltaY < 0 ? 'zoom-in' : 'zoom-out'
+    cursorTimeoutRef.current = window.setTimeout(() => {
+      if (currentTool === DrawTools.Rectangle) {
+        container.style.cursor = 'crosshair'
+      } else {
+        container.style.cursor = 'default'
+      }
+      cursorTimeoutRef.current = null
+    }, 300)
 
     const scaleBy = 1.2
     const oldScale = scale
@@ -204,7 +249,7 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
 
   useEffect(() => {
     if (selectedImage && dimensions.width > 0 && dimensions.height > 0) {
-      const newScale = 0.1
+      const newScale = 0.2
       const scaledImageWidth = selectedImage.image.width * newScale
       const scaledImageHeight = selectedImage.image.height * newScale
 
@@ -261,9 +306,25 @@ export const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(funct
             onMouseLeave={() => setCrosshairPos(null)}
             onMouseEnter={() => {
               const stage = stageRef.current
-              if (!stage) return
+              if (!stage || !selectedImage) return
               const pointer = stage.getPointerPosition()
-              if (pointer) setCrosshairPos(pointer)
+              if (!pointer) return
+
+              const layer = stage.getLayers()[0]
+              if (!layer) return
+
+              const transform = layer.getAbsoluteTransform().copy().invert()
+              const pos = transform.point(pointer)
+
+              const isWithinImage =
+                pos.x >= 0 &&
+                pos.x <= selectedImage.image.width &&
+                pos.y >= 0 &&
+                pos.y <= selectedImage.image.height
+
+              if (isWithinImage) {
+                setCrosshairPos(pointer)
+              }
             }}
             onWheel={handleWheel}
           >

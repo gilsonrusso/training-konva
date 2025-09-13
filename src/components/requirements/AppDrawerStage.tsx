@@ -68,40 +68,41 @@ export const AppDrawerStage = memo(function AppDrawerStage({
         if (dataUri) {
           downloadURI({
             uri: dataUri,
-            name: `annotated_${selectedImage?.image.src.split('/').pop()?.split('.')[0] || 'image'}.png`,
+            name: `annotated_${selectedImage?.image.src.split('/').pop() || 'image'}`,
           })
-          showSnackbar('Image successfully exported as PNG!')
-        } else {
-          showSnackbar('Could not export image.')
-        }
-      } else if (exportType === 'yolo') {
-        const annotationFiles: File[] = []
-
-        images.forEach((img) => {
-          if (img.rects.length > 0) {
-            const imageFileName = img.image.src.split('/').pop()?.split('.')[0] || `image_${img.id}`
-            const yoloContent = formatToYolo(img.rects, classItems, {
-              width: img.image.width,
-              height: img.image.height,
-            })
-            if (yoloContent) {
-              annotationFiles.push(createTextFile(yoloContent, `${imageFileName}.txt`))
-            }
-          }
-        })
-
-        if (annotationFiles.length === 0) {
-          showSnackbar('No annotated rectangles found for export in YOLO format')
+          showSnackbar('Image successfully exported!')
           return
         }
-
-        const allOriginalImageFiles = images.map((img) => img.originalFile)
-        const filesToZip = [...annotationFiles, ...allOriginalImageFiles]
-
-        const blob = await zipFiles(filesToZip, 'yolo_annotations.zip')
-        showSnackbar('YOLO notes successfully exported as ZIP!')
-        return blob
+        showSnackbar('Could not export image.')
+        return
       }
+
+      const annotationFiles: File[] = []
+
+      images.forEach((img) => {
+        if (img.rects.length > 0) {
+          const imageFileName = img.image.src.split('/').pop()?.split('.')[0] || `image_${img.id}`
+          const yoloContent = formatToYolo(img.rects, classItems, {
+            width: img.image.width,
+            height: img.image.height,
+          })
+          if (yoloContent) {
+            annotationFiles.push(createTextFile(yoloContent, `${imageFileName}.txt`))
+          }
+        }
+      })
+
+      if (annotationFiles.length === 0) {
+        showSnackbar('No annotated rectangles found for export in YOLO format')
+        return
+      }
+
+      const allOriginalImageFiles = images.map((img) => img.originalFile)
+      const filesToZip = [...annotationFiles, ...allOriginalImageFiles]
+
+      const blob = await zipFiles(filesToZip, 'yolo_annotations.zip')
+      showSnackbar('YOLO notes successfully exported as ZIP!')
+      return blob
     },
     [selectedImage, images, classItems, showSnackbar]
   )

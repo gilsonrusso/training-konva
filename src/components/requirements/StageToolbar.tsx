@@ -1,4 +1,4 @@
-import type { ElementType } from 'react'
+import { memo, type ElementType } from 'react'
 import React from 'react'
 
 import { Grid, IconButton } from '@mui/material'
@@ -22,12 +22,12 @@ type StageToolbarProps = {
   isImageSelected: boolean
 }
 
-export const StageToolbar = ({
+export const StageToolbar = memo(function StageToolbar({
   paintOptions,
   currentTool,
   dispatch,
   isImageSelected,
-}: StageToolbarProps) => {
+}: StageToolbarProps) {
   return (
     <Grid container spacing={1} columns={12} sx={{ marginY: 2, justifyContent: 'center' }}>
       {paintOptions.map(({ icon: Icon, id, disabled }) => (
@@ -45,4 +45,4 @@ export const StageToolbar = ({
       ))}
     </Grid>
   )
-}
+})
